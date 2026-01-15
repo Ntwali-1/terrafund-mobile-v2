@@ -1,0 +1,51 @@
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { MaterialIcons } from '@expo/vector-icons';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import ExploreScreen from './src/screens/ExploreScreen';
+import DashboardScreen from './src/screens/DashboardScreen';
+import PortfolioScreen from './src/screens/PortfolioScreen';
+import WalletScreen from './src/screens/WalletScreen';
+import ProfileScreen from './src/screens/ProfileScreen';
+
+const Tab = createBottomTabNavigator();
+
+export default function App() {
+  return (
+    <SafeAreaProvider>
+      <NavigationContainer>
+        <Tab.Navigator
+          screenOptions={({ route }) => ({
+            tabBarIcon: ({ focused, color, size }) => {
+              let iconName;
+
+              if (route.name === 'Explore') {
+                iconName = 'explore';
+              } else if (route.name === 'Dashboard') {
+                iconName = 'dashboard';
+              } else if (route.name === 'Portfolio') {
+                iconName = 'pie-chart';
+              } else if (route.name === 'Wallet') {
+                iconName = 'account-balance-wallet';
+              } else if (route.name === 'Profile') {
+                iconName = 'person';
+              }
+
+              return <MaterialIcons name={iconName} size={size} color={color} />;
+            },
+            tabBarActiveTintColor: '#11d421',
+            tabBarInactiveTintColor: 'gray',
+            headerShown: false,
+          })}
+        >
+          <Tab.Screen name="Explore" component={ExploreScreen} />
+          <Tab.Screen name="Dashboard" component={DashboardScreen} />
+          <Tab.Screen name="Portfolio" component={PortfolioScreen} />
+          <Tab.Screen name="Wallet" component={WalletScreen} />
+          <Tab.Screen name="Profile" component={ProfileScreen} />
+        </Tab.Navigator>
+      </NavigationContainer>
+    </SafeAreaProvider>
+  );
+}
