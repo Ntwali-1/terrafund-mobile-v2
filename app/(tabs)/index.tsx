@@ -1,4 +1,3 @@
-// app/(tabs)/index.tsx
 import { View, StyleSheet } from 'react-native';
 import { Link } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -8,7 +7,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <MaterialIcons name="potted-plant" size={64} color="#11d421" />
+        <MaterialIcons name="grass" size={64} color="#11d421" />
         <Link href="/(tabs)/explore" style={styles.link}>
           Go to App
         </Link>
