@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { Colors } from '@/constants/theme';
+
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -23,17 +23,14 @@ export default function LoginScreen() {
     }
 
     setLoading(true);
-    // TODO: Implement actual API call
     setTimeout(() => {
       setLoading(false);
-      // Mock: Check if user has selected role
-      // For demo, redirect to role selection
       router.replace('/auth/role-selection');
     }, 1500);
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? Colors.dark.background : Colors.light.background }]} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? '#0a0a0a' : '#ffffff' }]} edges={['top']}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
@@ -42,20 +39,25 @@ export default function LoginScreen() {
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity
-              style={[styles.backButton, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#f5f5f5' }]}
+              style={[styles.backButton, { backgroundColor: isDark ? '#1a1a1a' : '#f0fdf4' }]}
               onPress={() => router.back()}
             >
-              <MaterialIcons name="arrow-back" size={24} color={isDark ? Colors.dark.text : Colors.light.text} />
+              <MaterialIcons name="arrow-back" size={24} color="#11d421" />
             </TouchableOpacity>
+          </View>
+
+          {/* Branding */}
+          <View style={styles.brandingContainer}>
+            <Text style={[styles.brandText, { color: '#11d421' }]}>TerraFund</Text>
           </View>
 
           {/* Title Section */}
           <View style={styles.titleSection}>
-            <Text style={[styles.title, { color: isDark ? Colors.dark.text : Colors.light.text }]}>
+            <Text style={[styles.title, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>
               Welcome Back
             </Text>
-            <Text style={[styles.subtitle, { color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary }]}>
-              Sign in to continue investing
+            <Text style={[styles.subtitle, { color: isDark ? '#a0a0a0' : '#4a4a4a' }]}>
+              Sign in to continue your impact
             </Text>
           </View>
 
@@ -63,18 +65,18 @@ export default function LoginScreen() {
           <View style={styles.form}>
             {/* Email Input */}
             <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: isDark ? Colors.dark.text : Colors.light.text }]}>
+              <Text style={[styles.label, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>
                 Email Address
               </Text>
-              <View style={[styles.inputContainer, { 
-                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#ffffff',
-                borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+              <View style={[styles.inputContainer, {
+                backgroundColor: isDark ? '#1a1a1a' : '#f9fafb',
+                borderColor: isDark ? '#333333' : '#eeeeee',
               }]}>
-                <MaterialIcons name="email" size={20} color={isDark ? Colors.dark.textSecondary : Colors.light.textSecondary} />
+                <MaterialIcons name="email" size={20} color="#11d421" />
                 <TextInput
-                  style={[styles.input, { color: isDark ? Colors.dark.text : Colors.light.text }]}
+                  style={[styles.input, { color: isDark ? '#ffffff' : '#0a0a0a' }]}
                   placeholder="Enter your email"
-                  placeholderTextColor={isDark ? Colors.dark.textSecondary : Colors.light.textSecondary}
+                  placeholderTextColor="#888888"
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
@@ -86,18 +88,18 @@ export default function LoginScreen() {
 
             {/* Password Input */}
             <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: isDark ? Colors.dark.text : Colors.light.text }]}>
+              <Text style={[styles.label, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>
                 Password
               </Text>
-              <View style={[styles.inputContainer, { 
-                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#ffffff',
-                borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+              <View style={[styles.inputContainer, {
+                backgroundColor: isDark ? '#1a1a1a' : '#f9fafb',
+                borderColor: isDark ? '#333333' : '#eeeeee',
               }]}>
-                <MaterialIcons name="lock" size={20} color={isDark ? Colors.dark.textSecondary : Colors.light.textSecondary} />
+                <MaterialIcons name="lock" size={20} color="#11d421" />
                 <TextInput
-                  style={[styles.input, { color: isDark ? Colors.dark.text : Colors.light.text }]}
+                  style={[styles.input, { color: isDark ? '#ffffff' : '#0a0a0a' }]}
                   placeholder="Enter your password"
-                  placeholderTextColor={isDark ? Colors.dark.textSecondary : Colors.light.textSecondary}
+                  placeholderTextColor="#888888"
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
@@ -107,7 +109,7 @@ export default function LoginScreen() {
                   <MaterialIcons
                     name={showPassword ? 'visibility' : 'visibility-off'}
                     size={20}
-                    color={isDark ? Colors.dark.textSecondary : Colors.light.textSecondary}
+                    color="#888888"
                   />
                 </TouchableOpacity>
               </View>
@@ -120,43 +122,38 @@ export default function LoginScreen() {
 
             {/* Login Button */}
             <TouchableOpacity
-              style={[styles.loginButton, loading && styles.loginButtonDisabled]}
               onPress={handleLogin}
               disabled={loading}
+              style={[styles.loginButton, { backgroundColor: '#11d421' }, loading && styles.loginButtonDisabled]}
             >
               {loading ? (
                 <Text style={styles.loginButtonText}>Signing In...</Text>
               ) : (
-                <>
-                  <Text style={styles.loginButtonText}>Sign In</Text>
-                  <MaterialIcons name="arrow-forward" size={20} color="white" />
-                </>
+                <Text style={styles.loginButtonText}>Sign In</Text>
               )}
             </TouchableOpacity>
 
             {/* Divider */}
             <View style={styles.divider}>
-              <View style={[styles.dividerLine, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)' }]} />
-              <Text style={[styles.dividerText, { color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary }]}>
-                OR
-              </Text>
-              <View style={[styles.dividerLine, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)' }]} />
+              <View style={[styles.dividerLine, { backgroundColor: isDark ? '#333333' : '#eeeeee' }]} />
+              <Text style={[styles.dividerText, { color: '#888888' }]}>OR</Text>
+              <View style={[styles.dividerLine, { backgroundColor: isDark ? '#333333' : '#eeeeee' }]} />
             </View>
 
             {/* Social Login */}
-            <TouchableOpacity style={[styles.socialButton, { 
-              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#ffffff',
-              borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+            <TouchableOpacity style={[styles.socialButton, {
+              backgroundColor: isDark ? '#1a1a1a' : '#ffffff',
+              borderColor: isDark ? '#333333' : '#eeeeee'
             }]}>
-              <MaterialIcons name="g-translate" size={20} color={isDark ? Colors.dark.text : Colors.light.text} />
-              <Text style={[styles.socialButtonText, { color: isDark ? Colors.dark.text : Colors.light.text }]}>
+              <MaterialIcons name="g-translate" size={20} color={isDark ? '#ffffff' : '#0a0a0a'} />
+              <Text style={[styles.socialButtonText, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>
                 Continue with Google
               </Text>
             </TouchableOpacity>
 
             {/* Sign Up Link */}
             <View style={styles.signupLink}>
-              <Text style={[styles.signupText, { color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary }]}>
+              <Text style={[styles.signupText, { color: isDark ? '#a0a0a0' : '#4a4a4a' }]}>
                 Don't have an account?{' '}
               </Text>
               <TouchableOpacity onPress={() => router.push('/auth/signup')}>
@@ -174,6 +171,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  brandingContainer: {
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  brandText: {
+    fontSize: 32,
+    fontFamily: 'Aclonica_400Regular',
+    color: '#11d421',
+    letterSpacing: -1,
+  },
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
@@ -181,12 +188,12 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingTop: 8,
-    marginBottom: 24,
+    marginBottom: 16,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -195,12 +202,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
-    fontWeight: '800',
+    fontFamily: 'SpaceGrotesk_700Bold',
     marginBottom: 8,
     letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 16,
+    fontFamily: 'Poppins_400Regular',
+    lineHeight: 24,
   },
   form: {
     gap: 20,
@@ -210,13 +219,13 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 8,
     borderRadius: 12,
     borderWidth: 1,
     gap: 12,
@@ -224,6 +233,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
+    fontFamily: 'Poppins_400Regular',
   },
   forgotPassword: {
     alignSelf: 'flex-end',
@@ -231,21 +241,14 @@ const styles = StyleSheet.create({
   forgotPasswordText: {
     color: '#11d421',
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
   },
   loginButton: {
-    backgroundColor: '#11d421',
-    paddingVertical: 16,
+    height: 56,
     borderRadius: 12,
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    shadowColor: '#11d421',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    marginTop: 8,
   },
   loginButtonDisabled: {
     opacity: 0.6,
@@ -253,12 +256,12 @@ const styles = StyleSheet.create({
   loginButtonText: {
     color: '#ffffff',
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
   },
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 8,
+    marginVertical: 10,
   },
   dividerLine: {
     flex: 1,
@@ -267,20 +270,20 @@ const styles = StyleSheet.create({
   dividerText: {
     paddingHorizontal: 16,
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
   },
   socialButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 14,
+    height: 56,
     borderRadius: 12,
     borderWidth: 1,
     gap: 12,
   },
   socialButtonText: {
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
   },
   signupLink: {
     flexDirection: 'row',
@@ -289,10 +292,12 @@ const styles = StyleSheet.create({
   },
   signupText: {
     fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
   },
   signupLinkText: {
     color: '#11d421',
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
   },
 });
+

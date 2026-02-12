@@ -1,8 +1,11 @@
-import { View, Text, TouchableOpacity, ScrollView, ImageBackground, StyleSheet, ImageSourcePropType } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, ImageBackground, StyleSheet, ImageSourcePropType, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { StatusBar } from 'expo-status-bar';
+
+const { width } = Dimensions.get('window');
 
 interface FarmCardProps {
   image: ImageSourcePropType;
@@ -34,56 +37,70 @@ const FarmCard: React.FC<FarmCardProps> = ({
   const isDark = colorScheme === 'dark';
 
   return (
-    <View style={[styles.card, {
-      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#fff',
-      borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
-    }]}>
+    <TouchableOpacity
+      activeOpacity={0.9}
+      onPress={() => router.push("/land-investment-details")}
+      style={[styles.card, {
+        backgroundColor: isDark ? '#1a1a1a' : '#ffffff',
+        borderColor: isDark ? '#333333' : '#eeeeee'
+      }]}
+    >
       <ImageBackground source={image} style={styles.cardImage}>
-        <View style={[styles.locationBadge, {
-          backgroundColor: isDark ? 'rgba(0, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.9)'
-        }]}>
-          <MaterialIcons name="location-on" size={12} color="#11d421" />
-          <Text style={[styles.locationText, { color: isDark ? '#fff' : '#0d1b0f' }]}>{location}</Text>
-        </View>
-        <View style={styles.cropBadge}>
-          <MaterialIcons name={cropIcon as any} size={12} color="white" />
-          <Text style={styles.cropText}>{crop}</Text>
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.2)' }]} />
+        <View style={styles.cardBadges}>
+          <BlurBadge icon="location-on" text={location} isDark={isDark} />
+          <View style={[styles.cropBadge, { backgroundColor: '#11d421' }]}>
+            <MaterialIcons name={cropIcon as any} size={14} color="white" />
+            <Text style={styles.cropText}>{crop}</Text>
+          </View>
         </View>
       </ImageBackground>
+
       <View style={styles.cardContent}>
         <View style={styles.cardHeader}>
-          <View>
+          <View style={styles.titleContainer}>
             <Text style={[styles.tag, { color: '#11d421' }]}>{tag}</Text>
-            <Text style={[styles.cardTitle, { color: isDark ? '#fff' : '#0d1b0f' }]}>{title}</Text>
+            <Text style={[styles.cardTitle, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>{title}</Text>
           </View>
-          <View style={styles.roiBadge}>
+          <View style={[styles.roiBadge, { backgroundColor: '#11d421' }]}>
             <Text style={styles.roiText}>{roi}% ROI</Text>
           </View>
         </View>
-        <Text style={[styles.address, { color: isDark ? '#9ca3af' : '#4c9a52' }]}>{address}</Text>
 
-        <View style={[styles.statsRow, { borderTopColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)' }]}>
-          <View style={styles.stat}>
-            <Text style={[styles.statLabel, { color: isDark ? '#9ca3af' : '#6b7280' }]}>Min Investment</Text>
-            <Text style={[styles.statValue, { color: isDark ? '#fff' : '#0d1b0f' }]}>{minInvestment}</Text>
-          </View>
-          <View style={styles.stat}>
-            <Text style={[styles.statLabel, { color: isDark ? '#9ca3af' : '#6b7280' }]}>Risk Level</Text>
-            <Text style={[styles.statValue, { color: isDark ? '#fff' : '#0d1b0f' }]}>{riskLevel}</Text>
-          </View>
+        <View style={styles.addressRow}>
+          <MaterialIcons name="place" size={14} color={isDark ? '#9ca3af' : '#6b7280'} />
+          <Text style={[styles.address, { color: isDark ? '#9ca3af' : '#6b7280' }]} numberOfLines={1}>
+            {address}
+          </Text>
         </View>
 
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => router.push("/land-investment-details")}
-        >
-          <Text style={styles.buttonText}>View Investment Details</Text>
-          <MaterialIcons name="arrow-forward-ios" size={14} color="white" />
-        </TouchableOpacity>
+        <View style={[styles.statsRow, { borderTopColor: isDark ? '#333333' : '#eeeeee' }]}>
+          <View style={styles.stat}>
+            <Text style={[styles.statLabel, { color: isDark ? '#9ca3af' : '#6b7280' }]}>Min Invest</Text>
+            <Text style={[styles.statValue, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>{minInvestment}</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.stat}>
+            <Text style={[styles.statLabel, { color: isDark ? '#9ca3af' : '#6b7280' }]}>Risk Level</Text>
+            <View style={styles.riskBadge}>
+              <View style={[styles.riskDot, { backgroundColor: riskLevel === 'Low' ? '#11d421' : '#f59e0b' }]} />
+              <Text style={[styles.statValue, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>{riskLevel}</Text>
+            </View>
+          </View>
+        </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
+
+const BlurBadge = ({ icon, text, isDark }: { icon: string; text: string; isDark: boolean }) => (
+  <View style={[styles.blurBadge, {
+    backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(255, 255, 255, 0.9)'
+  }]}>
+    <MaterialIcons name={icon as any} size={14} color="#11d421" />
+    <Text style={[styles.blurBadgeText, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>{text}</Text>
+  </View>
+);
 
 export default function ExploreScreen() {
   const router = useRouter();
@@ -133,85 +150,62 @@ export default function ExploreScreen() {
   ];
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? '#0a0a0a' : '#f8fafc' }]} edges={['top']}>
-      <View style={styles.container}>
-        {/* Top App Bar */}
-        <View style={[styles.header, {
-          backgroundColor: isDark ? 'rgba(10, 10, 10, 0.8)' : 'rgba(248, 250, 252, 0.8)'
-        }]}>
-          <View style={styles.headerLeft}>
-            <MaterialIcons name="local-florist" size={28} color="#11d421" />
-            <Text style={[styles.headerTitle, { color: isDark ? '#fff' : '#0d1b0f' }]}>Explore Lands</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? '#0a0a0a' : '#fcfcfc' }]} edges={['top']}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+
+      {/* Background */}
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: isDark ? '#0a0a0a' : '#fcfcfc' }]} />
+
+      <View style={{ flex: 1 }}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View>
+            <Text style={[styles.welcomeText, { color: isDark ? '#9ca3af' : '#6b7280' }]}>Browse Lands</Text>
+            <Text style={[styles.headerTitle, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>Explore Lands</Text>
           </View>
-          <View style={styles.headerRight}>
-            <TouchableOpacity style={[styles.iconButton, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#fff' }]}>
-              <MaterialIcons name="search" size={24} color={isDark ? '#fff' : '#0d1b0f'} />
+          <View style={styles.headerActions}>
+            <TouchableOpacity style={[styles.iconButton, { backgroundColor: isDark ? '#1a1a1a' : '#ffffff', borderColor: isDark ? '#333333' : '#eeeeee' }]}>
+              <MaterialIcons name="search" size={24} color={isDark ? '#ffffff' : '#0a0a0a'} />
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.iconButton, {
-              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#fff',
-              position: 'relative'
-            }]}>
-              <MaterialIcons name="notifications" size={24} color={isDark ? '#fff' : '#0d1b0f'} />
-              <View style={styles.notificationBadge} />
+            <TouchableOpacity style={[styles.iconButton, { backgroundColor: isDark ? '#1a1a1a' : '#ffffff', borderColor: isDark ? '#333333' : '#eeeeee' }]}>
+              <MaterialIcons name="notifications-none" size={24} color={isDark ? '#ffffff' : '#0a0a0a'} />
+              <View style={styles.dot} />
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Filter Chips */}
-        <View style={styles.filterContainer}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.filterScrollContent}
-          >
-            <TouchableOpacity style={styles.filterChipActive}>
-              <MaterialIcons name="filter-list" size={18} color="white" />
-              <Text style={styles.filterChipActiveText}>Filters</Text>
+        {/* Filters */}
+        <View style={styles.filterSection}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
+            <TouchableOpacity style={[styles.activeFilterChip, { backgroundColor: '#11d421' }]}>
+              <MaterialIcons name="tune" size={18} color="white" />
+              <Text style={styles.activeFilterText}>All Fields</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.filterChip, {
-              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#fff',
-              borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
-            }]}>
-              <MaterialIcons name="agriculture" size={18} color={isDark ? '#fff' : '#0d1b0f'} />
-              <Text style={[styles.filterChipText, { color: isDark ? '#fff' : '#0d1b0f' }]}>Crop</Text>
-              <MaterialIcons name="expand-more" size={18} color={isDark ? '#fff' : '#0d1b0f'} />
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.filterChip, {
-              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#fff',
-              borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
-            }]}>
-              <MaterialIcons name="location-on" size={18} color={isDark ? '#fff' : '#0d1b0f'} />
-              <Text style={[styles.filterChipText, { color: isDark ? '#fff' : '#0d1b0f' }]}>Location</Text>
-              <MaterialIcons name="expand-more" size={18} color={isDark ? '#fff' : '#0d1b0f'} />
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.filterChip, {
-              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#fff',
-              borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
-            }]}>
-              <MaterialIcons name="verified-user" size={18} color={isDark ? '#fff' : '#0d1b0f'} />
-              <Text style={[styles.filterChipText, { color: isDark ? '#fff' : '#0d1b0f' }]}>Risk</Text>
-              <MaterialIcons name="expand-more" size={18} color={isDark ? '#fff' : '#0d1b0f'} />
-            </TouchableOpacity>
+
+            {['Grains', 'Fruits', 'Vegetables', 'Sustainable'].map((category) => (
+              <TouchableOpacity
+                key={category}
+                style={[styles.filterChip, {
+                  backgroundColor: isDark ? '#1a1a1a' : '#ffffff',
+                  borderColor: isDark ? '#333333' : '#eeeeee'
+                }]}
+              >
+                <Text style={[styles.filterText, { color: isDark ? '#ffffff' : '#4b5563' }]}>{category}</Text>
+              </TouchableOpacity>
+            ))}
           </ScrollView>
         </View>
 
-        {/* Farm Cards */}
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Results */}
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <Text style={[styles.resultsLabel, { color: isDark ? '#9ca3af' : '#6b7280' }]}>3 Lands Found</Text>
           {farmData.map((farm) => (
-            <FarmCard
-              key={farm.id}
-              image={farm.image}
-              location={farm.location}
-              crop={farm.crop}
-              cropIcon={farm.cropIcon}
-              tag={farm.tag}
-              title={farm.title}
-              roi={farm.roi}
-              address={farm.address}
-              minInvestment={farm.minInvestment}
-              riskLevel={farm.riskLevel}
-            />
+            <FarmCard key={farm.id} {...farm} />
           ))}
+          <View style={{ height: 40 }} />
         </ScrollView>
       </View>
     </SafeAreaView>
@@ -224,130 +218,123 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-  },
-  headerLeft: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+  },
+  welcomeText: {
+    fontSize: 14,
+    fontFamily: 'Poppins_500Medium',
+    marginBottom: 2,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 28,
+    fontFamily: 'SpaceGrotesk_700Bold',
+    letterSpacing: -1,
   },
-  headerRight: {
+  headerActions: {
     flexDirection: 'row',
-    alignItems: 'center',
     gap: 12,
   },
   iconButton: {
-    padding: 8,
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
   },
-  notificationBadge: {
+  dot: {
     position: 'absolute',
-    top: 8,
-    right: 8,
+    top: 14,
+    right: 14,
     width: 8,
     height: 8,
     borderRadius: 4,
     backgroundColor: '#11d421',
+    borderWidth: 2,
+    borderColor: '#ffffff',
   },
-  filterContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 8,
+  filterSection: {
+    marginBottom: 20,
   },
-  filterScrollContent: {
+  filterScroll: {
+    paddingHorizontal: 24,
     gap: 12,
   },
-  filterChipActive: {
+  activeFilterChip: {
     flexDirection: 'row',
-    height: 40,
-    paddingHorizontal: 16,
-    borderRadius: 20,
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#11d421',
-    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    gap: 8,
   },
-  filterChipActiveText: {
-    color: '#fff',
+  activeFilterText: {
+    color: '#ffffff',
+    fontFamily: 'Poppins_600SemiBold',
     fontSize: 14,
-    fontWeight: '600',
   },
   filterChip: {
-    flexDirection: 'row',
-    height: 40,
     paddingHorizontal: 16,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    gap: 6,
-  },
-  filterChipText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 24,
-    gap: 24,
-  },
-  card: {
+    paddingVertical: 10,
     borderRadius: 12,
     borderWidth: 1,
+    justifyContent: 'center',
+  },
+  filterText: {
+    fontFamily: 'Poppins_500Medium',
+    fontSize: 14,
+  },
+  scrollContent: {
+    paddingHorizontal: 24,
+  },
+  resultsLabel: {
+    fontSize: 14,
+    fontFamily: 'Poppins_600SemiBold',
+    marginBottom: 16,
+  },
+  card: {
+    borderRadius: 24,
+    borderWidth: 1,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    marginBottom: 24,
   },
   cardImage: {
     width: '100%',
-    aspectRatio: 16 / 10,
+    height: 200,
+    justifyContent: 'flex-start',
   },
-  locationBadge: {
-    position: 'absolute',
-    top: 16,
-    left: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
+  cardBadges: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 16,
+  },
+  blurBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    gap: 6,
   },
-  locationText: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
+  blurBadgeText: {
+    fontSize: 12,
+    fontFamily: 'Poppins_600SemiBold',
   },
   cropBadge: {
-    position: 'absolute',
-    top: 16,
-    right: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    backgroundColor: '#11d421',
-    borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    gap: 6,
   },
   cropText: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: 'bold',
+    color: '#ffffff',
+    fontSize: 12,
+    fontFamily: 'Poppins_700Bold',
     textTransform: 'uppercase',
   },
   cardContent: {
@@ -357,69 +344,79 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 8,
+    marginBottom: 12,
+  },
+  titleContainer: {
+    flex: 1,
+    marginRight: 10,
   },
   tag: {
     fontSize: 12,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins_700Bold',
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 1,
     marginBottom: 4,
   },
   cardTitle: {
     fontSize: 20,
-    fontWeight: '800',
-    lineHeight: 24,
+    fontFamily: 'SpaceGrotesk_700Bold',
+    letterSpacing: -0.5,
   },
   roiBadge: {
-    backgroundColor: 'rgba(17, 212, 33, 0.1)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
   },
   roiText: {
-    color: '#11d421',
+    color: '#ffffff',
     fontSize: 12,
-    fontWeight: 'bold',
+    fontFamily: 'SpaceGrotesk_700Bold',
+  },
+  addressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 16,
   },
   address: {
     fontSize: 14,
-    marginBottom: 16,
+    fontFamily: 'Poppins_400Regular',
+    flex: 1,
   },
   statsRow: {
     flexDirection: 'row',
-    gap: 16,
     paddingTop: 16,
     borderTopWidth: 1,
-    marginBottom: 20,
+    alignItems: 'center',
   },
   stat: {
     flex: 1,
   },
   statLabel: {
     fontSize: 10,
-    fontWeight: '700',
+    fontFamily: 'Poppins_600SemiBold',
     textTransform: 'uppercase',
-    marginBottom: 4,
     letterSpacing: 0.5,
+    marginBottom: 4,
   },
   statValue: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 15,
+    fontFamily: 'SpaceGrotesk_700Bold',
   },
-  button: {
-    width: '100%',
-    backgroundColor: '#11d421',
-    paddingVertical: 12,
-    borderRadius: 12,
+  statDivider: {
+    width: 1,
+    height: 24,
+    backgroundColor: '#eeeeee',
+    marginHorizontal: 16,
+  },
+  riskBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
+    gap: 6,
   },
-  buttonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
+  riskDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
 });

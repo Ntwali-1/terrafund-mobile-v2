@@ -51,7 +51,7 @@ export default function SignupScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? Colors.dark.background : Colors.light.background }]} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? '#0a0a0a' : '#ffffff' }]} edges={['top']}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
@@ -60,20 +60,25 @@ export default function SignupScreen() {
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity
-              style={[styles.backButton, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#f5f5f5' }]}
+              style={[styles.backButton, { backgroundColor: isDark ? '#1a1a1a' : '#f0fdf4' }]}
               onPress={() => router.back()}
             >
-              <MaterialIcons name="arrow-back" size={24} color={isDark ? Colors.dark.text : Colors.light.text} />
+              <MaterialIcons name="arrow-back" size={24} color="#11d421" />
             </TouchableOpacity>
+          </View>
+
+          {/* Branding */}
+          <View style={styles.brandingContainer}>
+            <Text style={[styles.brandText, { color: '#11d421' }]}>TerraFund</Text>
           </View>
 
           {/* Title Section */}
           <View style={styles.titleSection}>
-            <Text style={[styles.title, { color: isDark ? Colors.dark.text : Colors.light.text }]}>
+            <Text style={[styles.title, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>
               Create Account
             </Text>
-            <Text style={[styles.subtitle, { color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary }]}>
-              Join TerraFund and start investing
+            <Text style={[styles.subtitle, { color: isDark ? '#a0a0a0' : '#4a4a4a' }]}>
+              Join TerraFund and start your impact
             </Text>
           </View>
 
@@ -81,18 +86,18 @@ export default function SignupScreen() {
           <View style={styles.form}>
             {/* Full Name Input */}
             <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: isDark ? Colors.dark.text : Colors.light.text }]}>
+              <Text style={[styles.label, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>
                 Full Name <Text style={styles.required}>*</Text>
               </Text>
-              <View style={[styles.inputContainer, { 
-                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#ffffff',
-                borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+              <View style={[styles.inputContainer, {
+                backgroundColor: isDark ? '#1a1a1a' : '#f9fafb',
+                borderColor: isDark ? '#333333' : '#eeeeee',
               }]}>
-                <MaterialIcons name="person" size={20} color={isDark ? Colors.dark.textSecondary : Colors.light.textSecondary} />
+                <MaterialIcons name="person" size={20} color="#11d421" />
                 <TextInput
-                  style={[styles.input, { color: isDark ? Colors.dark.text : Colors.light.text }]}
+                  style={[styles.input, { color: isDark ? '#ffffff' : '#0a0a0a' }]}
                   placeholder="Enter your full name"
-                  placeholderTextColor={isDark ? Colors.dark.textSecondary : Colors.light.textSecondary}
+                  placeholderTextColor="#888888"
                   value={fullName}
                   onChangeText={setFullName}
                   autoCapitalize="words"
@@ -102,18 +107,18 @@ export default function SignupScreen() {
 
             {/* Email Input */}
             <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: isDark ? Colors.dark.text : Colors.light.text }]}>
+              <Text style={[styles.label, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>
                 Email Address <Text style={styles.required}>*</Text>
               </Text>
-              <View style={[styles.inputContainer, { 
-                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#ffffff',
-                borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+              <View style={[styles.inputContainer, {
+                backgroundColor: isDark ? '#1a1a1a' : '#f9fafb',
+                borderColor: isDark ? '#333333' : '#eeeeee',
               }]}>
-                <MaterialIcons name="email" size={20} color={isDark ? Colors.dark.textSecondary : Colors.light.textSecondary} />
+                <MaterialIcons name="email" size={20} color="#11d421" />
                 <TextInput
-                  style={[styles.input, { color: isDark ? Colors.dark.text : Colors.light.text }]}
+                  style={[styles.input, { color: isDark ? '#ffffff' : '#0a0a0a' }]}
                   placeholder="Enter your email"
-                  placeholderTextColor={isDark ? Colors.dark.textSecondary : Colors.light.textSecondary}
+                  placeholderTextColor="#888888"
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
@@ -125,18 +130,18 @@ export default function SignupScreen() {
 
             {/* Phone Number Input */}
             <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: isDark ? Colors.dark.text : Colors.light.text }]}>
+              <Text style={[styles.label, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>
                 Phone Number
               </Text>
-              <View style={[styles.inputContainer, { 
-                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#ffffff',
-                borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+              <View style={[styles.inputContainer, {
+                backgroundColor: isDark ? '#1a1a1a' : '#f9fafb',
+                borderColor: isDark ? '#333333' : '#eeeeee',
               }]}>
-                <MaterialIcons name="phone" size={20} color={isDark ? Colors.dark.textSecondary : Colors.light.textSecondary} />
+                <MaterialIcons name="phone" size={20} color="#11d421" />
                 <TextInput
-                  style={[styles.input, { color: isDark ? Colors.dark.text : Colors.light.text }]}
+                  style={[styles.input, { color: isDark ? '#ffffff' : '#0a0a0a' }]}
                   placeholder="Enter your phone number"
-                  placeholderTextColor={isDark ? Colors.dark.textSecondary : Colors.light.textSecondary}
+                  placeholderTextColor="#888888"
                   value={phoneNumber}
                   onChangeText={setPhoneNumber}
                   keyboardType="phone-pad"
@@ -146,18 +151,18 @@ export default function SignupScreen() {
 
             {/* Password Input */}
             <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: isDark ? Colors.dark.text : Colors.light.text }]}>
+              <Text style={[styles.label, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>
                 Password <Text style={styles.required}>*</Text>
               </Text>
-              <View style={[styles.inputContainer, { 
-                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#ffffff',
-                borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+              <View style={[styles.inputContainer, {
+                backgroundColor: isDark ? '#1a1a1a' : '#f9fafb',
+                borderColor: isDark ? '#333333' : '#eeeeee',
               }]}>
-                <MaterialIcons name="lock" size={20} color={isDark ? Colors.dark.textSecondary : Colors.light.textSecondary} />
+                <MaterialIcons name="lock" size={20} color="#11d421" />
                 <TextInput
-                  style={[styles.input, { color: isDark ? Colors.dark.text : Colors.light.text }]}
+                  style={[styles.input, { color: isDark ? '#ffffff' : '#0a0a0a' }]}
                   placeholder="Create a password"
-                  placeholderTextColor={isDark ? Colors.dark.textSecondary : Colors.light.textSecondary}
+                  placeholderTextColor="#888888"
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
@@ -167,29 +172,29 @@ export default function SignupScreen() {
                   <MaterialIcons
                     name={showPassword ? 'visibility' : 'visibility-off'}
                     size={20}
-                    color={isDark ? Colors.dark.textSecondary : Colors.light.textSecondary}
+                    color="#888888"
                   />
                 </TouchableOpacity>
               </View>
-              <Text style={[styles.hint, { color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary }]}>
+              <Text style={[styles.hint, { color: '#888888' }]}>
                 Must be at least 8 characters
               </Text>
             </View>
 
             {/* Confirm Password Input */}
             <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: isDark ? Colors.dark.text : Colors.light.text }]}>
+              <Text style={[styles.label, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>
                 Confirm Password <Text style={styles.required}>*</Text>
               </Text>
-              <View style={[styles.inputContainer, { 
-                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#ffffff',
-                borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+              <View style={[styles.inputContainer, {
+                backgroundColor: isDark ? '#1a1a1a' : '#f9fafb',
+                borderColor: isDark ? '#333333' : '#eeeeee',
               }]}>
-                <MaterialIcons name="lock" size={20} color={isDark ? Colors.dark.textSecondary : Colors.light.textSecondary} />
+                <MaterialIcons name="lock" size={20} color="#11d421" />
                 <TextInput
-                  style={[styles.input, { color: isDark ? Colors.dark.text : Colors.light.text }]}
+                  style={[styles.input, { color: isDark ? '#ffffff' : '#0a0a0a' }]}
                   placeholder="Confirm your password"
-                  placeholderTextColor={isDark ? Colors.dark.textSecondary : Colors.light.textSecondary}
+                  placeholderTextColor="#888888"
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
                   secureTextEntry={!showConfirmPassword}
@@ -199,7 +204,7 @@ export default function SignupScreen() {
                   <MaterialIcons
                     name={showConfirmPassword ? 'visibility' : 'visibility-off'}
                     size={20}
-                    color={isDark ? Colors.dark.textSecondary : Colors.light.textSecondary}
+                    color="#888888"
                   />
                 </TouchableOpacity>
               </View>
@@ -210,10 +215,16 @@ export default function SignupScreen() {
               style={styles.checkboxContainer}
               onPress={() => setAgreedToTerms(!agreedToTerms)}
             >
-              <View style={[styles.checkbox, agreedToTerms && styles.checkboxChecked]}>
+              <View style={[
+                styles.checkbox,
+                {
+                  backgroundColor: agreedToTerms ? '#11d421' : 'transparent',
+                  borderColor: agreedToTerms ? '#11d421' : (isDark ? '#333' : '#d1d5db')
+                }
+              ]}>
                 {agreedToTerms && <MaterialIcons name="check" size={16} color="white" />}
               </View>
-              <Text style={[styles.checkboxText, { color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary }]}>
+              <Text style={[styles.checkboxText, { color: isDark ? '#a0a0a0' : '#4a4a4a' }]}>
                 I agree to the{' '}
                 <Text style={styles.link}>Terms & Conditions</Text>
                 {' '}and{' '}
@@ -223,23 +234,20 @@ export default function SignupScreen() {
 
             {/* Signup Button */}
             <TouchableOpacity
-              style={[styles.signupButton, loading && styles.signupButtonDisabled]}
               onPress={handleSignup}
               disabled={loading}
+              style={[styles.signupButton, { backgroundColor: '#11d421' }, loading && styles.signupButtonDisabled]}
             >
               {loading ? (
                 <Text style={styles.signupButtonText}>Creating Account...</Text>
               ) : (
-                <>
-                  <Text style={styles.signupButtonText}>Create Account</Text>
-                  <MaterialIcons name="arrow-forward" size={20} color="white" />
-                </>
+                <Text style={styles.signupButtonText}>Create Account</Text>
               )}
             </TouchableOpacity>
 
             {/* Login Link */}
             <View style={styles.loginLink}>
-              <Text style={[styles.loginText, { color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary }]}>
+              <Text style={[styles.loginText, { color: isDark ? '#a0a0a0' : '#4a4a4a' }]}>
                 Already have an account?{' '}
               </Text>
               <TouchableOpacity onPress={() => router.push('/auth/login')}>
@@ -257,6 +265,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  brandingContainer: {
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  brandText: {
+    fontSize: 32,
+    fontFamily: 'Aclonica_400Regular',
+    color: '#11d421',
+    letterSpacing: -1,
+  },
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
@@ -264,12 +282,12 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingTop: 8,
-    marginBottom: 24,
+    marginBottom: 16,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -278,12 +296,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
-    fontWeight: '800',
+    fontFamily: 'SpaceGrotesk_700Bold',
     marginBottom: 8,
     letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 16,
+    fontFamily: 'Poppins_400Regular',
+    lineHeight: 24,
   },
   form: {
     gap: 20,
@@ -293,7 +313,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
   },
   required: {
     color: '#ef4444',
@@ -302,18 +322,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 8,
     borderRadius: 12,
     borderWidth: 1,
     gap: 12,
   },
   input: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
   },
   hint: {
     fontSize: 12,
     marginTop: 4,
+    fontFamily: 'Poppins_400Regular',
   },
   checkboxContainer: {
     flexDirection: 'row',
@@ -322,40 +344,29 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 4,
+    width: 22,
+    height: 22,
+    borderRadius: 6,
     borderWidth: 2,
-    borderColor: '#11d421',
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 2,
-  },
-  checkboxChecked: {
-    backgroundColor: '#11d421',
   },
   checkboxText: {
     flex: 1,
     fontSize: 13,
     lineHeight: 20,
+    fontFamily: 'Poppins_400Regular',
   },
   link: {
     color: '#11d421',
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
   },
   signupButton: {
-    backgroundColor: '#11d421',
-    paddingVertical: 16,
+    height: 56,
     borderRadius: 12,
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    shadowColor: '#11d421',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
     marginTop: 8,
   },
   signupButtonDisabled: {
@@ -364,7 +375,7 @@ const styles = StyleSheet.create({
   signupButtonText: {
     color: '#ffffff',
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
   },
   loginLink: {
     flexDirection: 'row',
@@ -373,10 +384,12 @@ const styles = StyleSheet.create({
   },
   loginText: {
     fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
   },
   loginLinkText: {
     color: '#11d421',
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
   },
 });
+

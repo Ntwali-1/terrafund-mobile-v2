@@ -13,12 +13,25 @@ export default function TabLayout() {
       screenOptions={{
         tabBarActiveTintColor: '#11d421',
         tabBarInactiveTintColor: 'gray',
+        tabBarLabelStyle: {
+          fontFamily: 'Poppins_500Medium',
+          fontSize: 11,
+          marginBottom: 4,
+        },
         headerShown: false,
         tabBarStyle: Platform.select({
           ios: {
             position: 'absolute',
+            height: 88,
+            paddingBottom: 30,
           },
-          default: {},
+          default: {
+            height: 64,
+            paddingBottom: 10,
+            bottom: 32,
+            borderBottomLeftRadius: 24,
+            borderBottomRightRadius: 24,
+          },
         }),
       }}>
       <Tabs.Screen
