@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet } from 'react-native';
 
+
 const DashboardScreen = () => {
   return (
     <View style={styles.container}>
@@ -20,5 +21,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope-Bold',
   },
 });
+
 
 export default DashboardScreen;
