@@ -1,7 +1,7 @@
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { Alert, StyleSheet, Text, TouchableOpacity, View, Dimensions, ScrollView } from 'react-native';
+import { useState, useRef, useEffect } from 'react';
+import { Alert, StyleSheet, Text, TouchableOpacity, View, Dimensions, ScrollView, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { StatusBar } from 'expo-status-bar';
@@ -13,18 +13,61 @@ export default function VerifyEmailScreen() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
 
+  const [otp, setOtp] = useState(['', '', '', '']);
+  const inputRefs = useRef<Array<TextInput | null>>([]);
   const [resending, setResending] = useState(false);
+  const [timer, setTimer] = useState(60);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (timer > 0) {
+      interval = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [timer]);
+
+  const handleOtpChange = (value: string, index: number) => {
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+
+    // Move to next input
+    if (value && index < 3) {
+      inputRefs.current[index + 1]?.focus();
+    }
+    // Submit if all filled
+    if (value && index === 3 && newOtp.every(v => v !== '')) {
+      handleVerify();
+    }
+  };
+
+  const handleKeyPress = (e: any, index: number) => {
+    if (e.nativeEvent.key === 'Backspace' && !otp[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
 
   const handleResendEmail = async () => {
     setResending(true);
     setTimeout(() => {
       setResending(false);
-      Alert.alert('Success', 'Verification email sent successfully');
+      setTimer(60);
+      Alert.alert('Success', 'New OTP sent successfully');
     }, 1500);
   };
 
-  const handleContinue = () => {
-    router.push('/auth/role-selection');
+  const handleVerify = () => {
+    const code = otp.join('');
+    if (code.length === 4) {
+      // In real app, call API
+      Alert.alert('Success', 'Email verified successfully!', [
+        { text: 'Continue', onPress: () => router.push('/auth/complete-profile') }
+      ]);
+    } else {
+      Alert.alert('Error', 'Please enter all 4 digits');
+    }
   };
 
   return (
@@ -54,91 +97,70 @@ export default function VerifyEmailScreen() {
 
         <View style={styles.iconContainer}>
           <View style={[styles.iconCircle, { backgroundColor: isDark ? '#1a1a1a' : '#ffffff', borderColor: isDark ? '#333333' : '#eeeeee' }]}>
-            <MaterialIcons name="mark-email-read" size={64} color="#11d421" />
+            <Ionicons name="mail-unread-outline" size={56} color="#11d421" />
           </View>
         </View>
 
-        {/* Title Section */}
         <View style={styles.textSection}>
           <Text style={[styles.title, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>
-            Verify Your Email
+            Enter OTP Code
           </Text>
           <Text style={[styles.description, { color: isDark ? '#a0a0a0' : '#4a4a4a' }]}>
-            We've sent a verification link to your email address. Please check your inbox and click the link to verify your account.
+            We've sent a 4-digit verification code to
           </Text>
+          <Text style={[styles.emailText, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>user@terrafund.com</Text>
         </View>
 
-        {/* Email Info Card */}
-        <View style={[styles.emailCard, {
-          backgroundColor: isDark ? '#1a1a1a' : '#ffffff',
-          borderColor: isDark ? '#333333' : '#eeeeee'
-        }]}>
-          <View style={styles.emailIconWrapper}>
-            <MaterialIcons name="email" size={20} color="#11d421" />
-          </View>
-          <Text style={[styles.emailText, { color: isDark ? '#ffffff' : '#4a4a4a' }]}>
-            user@terrafund.com
-          </Text>
+        {/* OTP Input Section */}
+        <View style={styles.otpContainer}>
+          {otp.map((digit, index) => (
+            <TextInput
+              key={index}
+              ref={(el: TextInput | null) => { inputRefs.current[index] = el; }}
+              style={[
+                styles.otpInput,
+                {
+                  backgroundColor: isDark ? '#1a1a1a' : '#ffffff',
+                  color: isDark ? '#ffffff' : '#0a0a0a',
+                  borderColor: digit ? '#11d421' : (isDark ? '#333333' : '#eeeeee')
+                }
+              ]}
+              maxLength={1}
+              keyboardType="number-pad"
+              value={digit}
+              onChangeText={(val) => handleOtpChange(val, index)}
+              onKeyPress={(e) => handleKeyPress(e, index)}
+              autoFocus={index === 0}
+            />
+          ))}
         </View>
 
-        {/* Instructions */}
-        <View style={styles.instructionsSection}>
-          <Text style={[styles.instructionsTitle, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>
-            What's next?
-          </Text>
-          <View style={styles.instructionsList}>
-            {[
-              { id: 1, text: 'Check your email inbox' },
-              { id: 2, text: 'Click the verification link' },
-              { id: 3, text: 'Return here to continue' }
-            ].map((step) => (
-              <View key={step.id} style={styles.instructionItem}>
-                <View style={[styles.stepNumber, { backgroundColor: '#11d421' }]}>
-                  <Text style={styles.stepNumberText}>{step.id}</Text>
-                </View>
-                <Text style={[styles.instructionText, { color: isDark ? '#a0a0a0' : '#4a4a4a' }]}>
-                  {step.text}
-                </Text>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        {/* Actions */}
         <View style={styles.actionsSection}>
-          {/* Continue Button */}
           <TouchableOpacity
-            style={[styles.continueButton, { backgroundColor: '#11d421' }]}
-            onPress={() => router.replace('/(tabs)')}
+            style={[styles.continueButton, { backgroundColor: '#11d421', opacity: otp.every(v => v !== '') ? 1 : 0.6 }]}
+            onPress={handleVerify}
+            disabled={!otp.every(v => v !== '')}
           >
-            <Text style={styles.continueButtonText}>Go to Dashboard</Text>
+            <Text style={styles.continueButtonText}>Verify & Continue</Text>
             <MaterialIcons name="arrow-forward" size={20} color="white" />
           </TouchableOpacity>
 
-          {/* Resend Email */}
-          <TouchableOpacity
-            style={[styles.resendButton, {
-              backgroundColor: isDark ? '#1a1a1a' : '#ffffff',
-              borderColor: isDark ? '#333333' : '#eeeeee'
-            }]}
-            onPress={handleResendEmail}
-            disabled={resending}
-          >
-            <MaterialIcons name="refresh" size={20} color={isDark ? '#ffffff' : '#11d421'} />
-            <Text style={[styles.resendButtonText, { color: isDark ? '#ffffff' : '#11d421' }]}>
-              {resending ? 'Sending...' : 'Resend Verification Email'}
+          <View style={styles.resendContainer}>
+            <Text style={[styles.resendLabel, { color: isDark ? '#a0a0a0' : '#666666' }]}>
+              Didn't receive the code?
             </Text>
-          </TouchableOpacity>
-
-          {/* Skip Link */}
-          <TouchableOpacity
-            style={styles.skipLink}
-            onPress={() => router.push('/auth/role-selection')}
-          >
-            <Text style={[styles.skipText, { color: isDark ? '#888888' : '#666666' }]}>
-              I'll verify later
-            </Text>
-          </TouchableOpacity>
+            {timer > 0 ? (
+              <Text style={[styles.timerText, { color: isDark ? '#888888' : '#888888' }]}>
+                Resend in {timer}s
+              </Text>
+            ) : (
+              <TouchableOpacity onPress={handleResendEmail} disabled={resending}>
+                <Text style={[styles.resendLink, { color: '#11d421' }]}>
+                  {resending ? 'Sending...' : 'Resend Now'}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -294,6 +316,21 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontFamily: 'Poppins_500Medium',
   },
+  otpContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 16,
+    marginBottom: 40,
+  },
+  otpInput: {
+    width: 60,
+    height: 60,
+    borderRadius: 16,
+    borderWidth: 2,
+    fontSize: 24,
+    fontFamily: 'SpaceGrotesk_700Bold',
+    textAlign: 'center',
+  },
   actionsSection: {
     gap: 12,
     marginTop: 20,
@@ -306,31 +343,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    marginBottom: 4,
+    marginBottom: 20,
   },
   continueButtonText: {
     color: '#ffffff',
     fontSize: 17,
     fontFamily: 'Poppins_700Bold',
   },
-  resendButton: {
-    flexDirection: 'row',
+  resendContainer: {
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    gap: 10,
+    gap: 8,
   },
-  resendButtonText: {
+  resendLabel: {
+    fontSize: 15,
+    fontFamily: 'Poppins_400Regular',
+  },
+  timerText: {
     fontSize: 15,
     fontFamily: 'Poppins_600SemiBold',
   },
-  skipLink: {
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  skipText: {
+  resendLink: {
     fontSize: 15,
     fontFamily: 'Poppins_600SemiBold',
   },
