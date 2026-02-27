@@ -1,14 +1,48 @@
-import { MaterialIcons, Ionicons } from '@expo/vector-icons';
+import { MaterialIcons, Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Image, Dimensions } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Dimensions, StatusBar } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Colors } from '@/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
-import { MotiView } from 'moti';
+import { MotiView, MotiText } from 'moti';
+import { Image } from 'expo-image';
 
 const { width, height } = Dimensions.get('window');
+
+const AnimatedCircle = ({ size, color, delay, duration, startPos }: any) => {
+  return (
+    <MotiView
+      from={{
+        translateX: startPos.x,
+        translateY: startPos.y,
+        opacity: 0.1
+      }}
+      animate={{
+        translateX: startPos.x + (Math.random() * 80 - 40),
+        translateY: startPos.y + (Math.random() * 80 - 40),
+        opacity: 0.3
+      }}
+      transition={{
+        type: 'timing',
+        duration: duration,
+        loop: true,
+        delay: delay,
+        repeatReverse: true,
+      }}
+      style={[
+        styles.animatedCircle,
+        {
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          backgroundColor: color,
+        }
+      ]}
+    />
+  );
+};
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -21,6 +55,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [focusedInput, setFocusedInput] = useState<string | null>(null);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -36,24 +71,22 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
+    <View style={[styles.container, { backgroundColor: isDark ? '#081209' : '#f8fafc' }]}>
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
 
-      {/* Background Image / Decoration */}
-      <View style={styles.headerBackground}>
-        <Image
-          source={require('@/assets/images/pexels-akos-szabo-145938-440731.jpg')}
-          style={styles.bgImage}
-          blurRadius={isDark ? 5 : 0}
-        />
+      {/* Creative Background */}
+      <View style={StyleSheet.absoluteFill}>
         <LinearGradient
-          colors={isDark ? ['transparent', '#102212'] : ['transparent', '#ffffff']}
-          style={styles.gradient}
+          colors={isDark ? ['#102212', '#081209'] : ['#f0fdf4', '#ffffff']}
+          style={StyleSheet.absoluteFill}
         />
+        <AnimatedCircle size={300} color="#11d421" delay={0} duration={4000} startPos={{ x: -100, y: -50 }} />
+        <AnimatedCircle size={250} color="#0d9618" delay={1000} duration={5000} startPos={{ x: width - 150, y: height * 0.3 }} />
+        <AnimatedCircle size={200} color="#11d421" delay={2000} duration={6000} startPos={{ x: width * 0.2, y: height * 0.8 }} />
       </View>
 
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
         <ScrollView
@@ -61,124 +94,168 @@ export default function LoginScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
+          {/* Header Branding */}
           <MotiView
-            from={{ opacity: 0, translateY: 20 }}
+            from={{ opacity: 0, translateY: -20 }}
             animate={{ opacity: 1, translateY: 0 }}
-            transition={{ type: 'timing', duration: 800 }}
+            transition={{ type: 'spring', damping: 15, delay: 100 }}
             style={styles.header}
           >
             <TouchableOpacity
-              style={[styles.backButton, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.8)' }]}
+              style={[styles.backButton, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(17, 212, 33, 0.08)' }]}
               onPress={() => router.back()}
             >
-              <MaterialIcons name="arrow-back" size={24} color={theme.text} />
+              <Ionicons name="chevron-back" size={20} color={theme.tint} />
             </TouchableOpacity>
+            <Text style={[styles.topBrandText, { color: theme.tint }]}>TerraFund</Text>
+            <View style={{ width: 44 }} />
           </MotiView>
 
-          <MotiView
-            from={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 200 }}
-            style={styles.brandingContainer}
-          >
-            <Image
-              source={require('@/assets/images/logo.png')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
-            <Text style={[styles.brandText, { color: theme.tint }]}>TerraFund</Text>
-          </MotiView>
+          {/* Title Section */}
+          <View style={styles.titleSection}>
+            <MotiText
+              from={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 300 }}
+              style={[styles.title, { color: theme.text }]}
+            >
+              Welcome Back
+            </MotiText>
+            <MotiText
+              from={{ opacity: 0, translateY: 10 }}
+              animate={{ opacity: 1, translateY: 0 }}
+              transition={{ delay: 400 }}
+              style={[styles.subtitle, { color: theme.textSecondary }]}
+            >
+              Sign in to manage your green investments
+            </MotiText>
+          </View>
 
-          <MotiView
-            from={{ opacity: 0, translateY: 20 }}
-            animate={{ opacity: 1, translateY: 0 }}
-            transition={{ delay: 300 }}
-            style={styles.titleSection}
-          >
-            <Text style={[styles.title, { color: theme.text }]}>Welcome Back</Text>
-            <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
-              Enter your credentials to continue your journey.
-            </Text>
-          </MotiView>
-
+          {/* Login Card (Glassmorphism) */}
           <MotiView
             from={{ opacity: 0, translateY: 30 }}
             animate={{ opacity: 1, translateY: 0 }}
-            transition={{ delay: 400 }}
-            style={styles.formContainer}
+            transition={{ delay: 600, type: 'spring', damping: 15 }}
+            style={[
+              styles.glassCard,
+              {
+                backgroundColor: isDark ? 'rgba(26, 58, 31, 0.4)' : 'rgba(255, 255, 255, 0.85)',
+                borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(17, 212, 33, 0.1)'
+              }
+            ]}
           >
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: theme.textSecondary }]}>Email Address</Text>
-              <View style={[styles.inputWrapper, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f9fafb', borderColor: theme.border }]}>
-                <Ionicons name="mail-outline" size={20} color={theme.tint} />
+            {/* Minimalist Inputs */}
+            <View style={styles.form}>
+              <View style={styles.inputGroup}>
+                <Text style={[styles.label, { color: focusedInput === 'email' ? theme.tint : theme.textSecondary }]}>
+                  EMAIL ADDRESS
+                </Text>
                 <TextInput
-                  style={[styles.input, { color: theme.text }]}
+                  style={[
+                    styles.modernInput,
+                    {
+                      color: theme.text,
+                      borderBottomColor: focusedInput === 'email' ? theme.tint : theme.border
+                    }
+                  ]}
                   placeholder="name@example.com"
-                  placeholderTextColor={isDark ? '#666' : '#999'}
+                  placeholderTextColor={isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'}
                   value={email}
                   onChangeText={setEmail}
+                  onFocus={() => setFocusedInput('email')}
+                  onBlur={() => setFocusedInput(null)}
                   keyboardType="email-address"
                   autoCapitalize="none"
                 />
               </View>
-            </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: theme.textSecondary }]}>Password</Text>
-              <View style={[styles.inputWrapper, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f9fafb', borderColor: theme.border }]}>
-                <Ionicons name="lock-closed-outline" size={20} color={theme.tint} />
-                <TextInput
-                  style={[styles.input, { color: theme.text }]}
-                  placeholder="••••••••"
-                  placeholderTextColor={isDark ? '#666' : '#999'}
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry={!showPassword}
-                  autoCapitalize="none"
-                />
-                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                  <Ionicons
-                    name={showPassword ? 'eye-outline' : 'eye-off-outline'}
-                    size={20}
-                    color="#888"
+              <View style={[styles.inputGroup, { marginTop: 24 }]}>
+                <View style={styles.labelRow}>
+                  <Text style={[styles.label, { color: focusedInput === 'password' ? theme.tint : theme.textSecondary }]}>
+                    PASSWORD
+                  </Text>
+                  <TouchableOpacity>
+                    <Text style={[styles.forgotText, { color: theme.tint }]}>Forgot?</Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.passwordWrapper}>
+                  <TextInput
+                    style={[
+                      styles.modernInput,
+                      {
+                        flex: 1,
+                        color: theme.text,
+                        borderBottomColor: focusedInput === 'password' ? theme.tint : theme.border
+                      }
+                    ]}
+                    placeholder="••••••••"
+                    placeholderTextColor={isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'}
+                    value={password}
+                    onChangeText={setPassword}
+                    onFocus={() => setFocusedInput('password')}
+                    onBlur={() => setFocusedInput(null)}
+                    secureTextEntry={!showPassword}
                   />
-                </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.eyeBtn}
+                    onPress={() => setShowPassword(!showPassword)}
+                  >
+                    <Ionicons
+                      name={showPassword ? "eye-off" : "eye"}
+                      size={20}
+                      color={focusedInput === 'password' ? theme.tint : theme.textSecondary}
+                    />
+                  </TouchableOpacity>
+                </View>
               </View>
+
+              <TouchableOpacity
+                onPress={handleLogin}
+                disabled={loading}
+                activeOpacity={0.8}
+                style={[styles.loginButton]}
+              >
+                <LinearGradient
+                  colors={['#11d421', '#0fb31c']}
+                  style={StyleSheet.absoluteFill}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                />
+                <Text style={styles.loginButtonText}>
+                  {loading ? 'SINING IN...' : 'SIGN IN'}
+                </Text>
+              </TouchableOpacity>
             </View>
-
-            <TouchableOpacity style={styles.forgotPassword}>
-              <Text style={[styles.forgotPasswordText, { color: theme.tint }]}>Forgot Password?</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={handleLogin}
-              disabled={loading}
-              style={[styles.loginButton, { backgroundColor: theme.tint }]}
-            >
-              <Text style={styles.loginButtonText}>{loading ? 'Signing in...' : 'Sign In'}</Text>
-            </TouchableOpacity>
 
             <View style={styles.divider}>
               <View style={[styles.line, { backgroundColor: theme.border }]} />
-              <Text style={[styles.dividerText, { color: theme.textSecondary }]}>or continue with</Text>
+              <Text style={[styles.dividerText, { color: theme.textSecondary }]}>OR CONTINUE WITH</Text>
               <View style={[styles.line, { backgroundColor: theme.border }]} />
             </View>
 
             <View style={styles.socialRow}>
-              <TouchableOpacity style={[styles.socialBtn, { backgroundColor: isDark ? '#1a1a1a' : '#fff', borderColor: theme.border }]}>
-                <Image source={{ uri: 'https://img.icons8.com/color/48/000000/google-logo.png' }} style={styles.socialIcon} />
+              <TouchableOpacity style={[styles.socialBtn, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : '#fff', borderColor: theme.border }]}>
+                <FontAwesome5 name="google" size={18} color={isDark ? "#fff" : "#4285F4"} />
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.socialBtn, { backgroundColor: isDark ? '#1a1a1a' : '#fff', borderColor: theme.border }]}>
-                <Ionicons name="logo-apple" size={24} color={theme.text} />
+              <TouchableOpacity style={[styles.socialBtn, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : '#fff', borderColor: theme.border }]}>
+                <FontAwesome5 name="apple" size={20} color={theme.text} />
               </TouchableOpacity>
             </View>
+          </MotiView>
 
-            <View style={styles.footerRow}>
-              <Text style={[styles.footerText, { color: theme.textSecondary }]}>Don't have an account? </Text>
-              <TouchableOpacity onPress={() => router.push('/auth/signup')}>
-                <Text style={[styles.footerLink, { color: theme.tint }]}>Sign Up</Text>
-              </TouchableOpacity>
-            </View>
+          {/* Footer */}
+          <MotiView
+            from={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 800 }}
+            style={styles.footer}
+          >
+            <Text style={[styles.footerText, { color: theme.textSecondary }]}>
+              Don't have an account?
+            </Text>
+            <TouchableOpacity onPress={() => router.push('/auth/signup')}>
+              <Text style={[styles.footerLink, { color: theme.tint }]}> Sign Up</Text>
+            </TouchableOpacity>
           </MotiView>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -190,28 +267,20 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  headerBackground: {
+  animatedCircle: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: height * 0.4,
-  },
-  bgImage: {
-    width: '100%',
-    height: '100%',
-    opacity: 0.6,
-  },
-  gradient: {
-    ...StyleSheet.absoluteFillObject,
+    opacity: 0.3,
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 24,
+    paddingHorizontal: 28,
     paddingBottom: 40,
   },
   header: {
-    marginBottom: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 40,
   },
   backButton: {
     width: 44,
@@ -219,136 +288,136 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
-  brandingContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  logo: {
-    width: 70,
-    height: 70,
-    marginBottom: 10,
-  },
-  brandText: {
-    fontSize: 26,
+  topBrandText: {
+    fontSize: 28,
     fontFamily: 'Aclonica_400Regular',
-    letterSpacing: -1,
+    letterSpacing: -0.5,
   },
   titleSection: {
+    marginBottom: 32,
     alignItems: 'center',
-    marginBottom: 30,
   },
   title: {
-    fontSize: 30,
+    fontSize: 24,
     fontFamily: 'SpaceGrotesk_700Bold',
-    marginBottom: 8,
+    letterSpacing: -0.3,
+    marginBottom: 6,
+    textAlign: 'center',
   },
   subtitle: {
-    fontSize: 15,
+    fontSize: 13,
     fontFamily: 'Poppins_400Regular',
+    lineHeight: 18,
     textAlign: 'center',
-    paddingHorizontal: 30,
-    lineHeight: 22,
+    maxWidth: '80%',
   },
-  formContainer: {
-    gap: 16,
+  glassCard: {
+    borderRadius: 24,
+    padding: 24,
+    paddingTop: 28,
+    borderWidth: 1.2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    elevation: 5,
+  },
+  form: {
+    marginBottom: 16,
   },
   inputGroup: {
-    gap: 8,
+    width: '100%',
   },
   label: {
-    fontSize: 14,
-    fontFamily: 'Poppins_600SemiBold',
-    marginLeft: 4,
+    fontSize: 10,
+    fontFamily: 'Poppins_700Bold',
+    letterSpacing: 1.2,
+    marginBottom: 4,
   },
-  inputWrapper: {
+  labelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  modernInput: {
+    fontSize: 15,
+    fontFamily: 'Poppins_500Medium',
+    paddingVertical: 10,
+    borderBottomWidth: 1.5,
+  },
+  passwordWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 60,
-    borderRadius: 18,
-    borderWidth: 1,
-    paddingHorizontal: 16,
-    gap: 12,
   },
-  input: {
-    flex: 1,
-    fontSize: 16,
-    fontFamily: 'Poppins_400Regular',
+  eyeBtn: {
+    position: 'absolute',
+    right: 0,
+    padding: 10,
   },
-  forgotPassword: {
-    alignSelf: 'flex-end',
-  },
-  forgotPasswordText: {
-    fontSize: 14,
+  forgotText: {
+    fontSize: 12,
     fontFamily: 'Poppins_600SemiBold',
   },
   loginButton: {
-    height: 60,
-    borderRadius: 18,
+    height: 52,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 10,
+    marginTop: 24,
+    overflow: 'hidden',
     shadowColor: '#11d421',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
     elevation: 4,
   },
   loginButtonText: {
     color: '#fff',
-    fontSize: 18,
-    fontFamily: 'Poppins_700Bold',
+    fontSize: 14,
+    fontFamily: 'Poppins_800ExtraBold',
+    letterSpacing: 1,
   },
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 10,
-    gap: 10,
+    marginVertical: 24,
+    gap: 12,
   },
   line: {
     flex: 1,
     height: 1,
   },
   dividerText: {
-    fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
+    fontSize: 9,
+    fontFamily: 'Poppins_700Bold',
+    letterSpacing: 1,
   },
   socialRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 20,
+    gap: 16,
   },
   socialBtn: {
-    width: 60,
-    height: 60,
+    width: 56,
+    height: 56,
     borderRadius: 18,
-    borderWidth: 1,
+    borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  socialIcon: {
-    width: 24,
-    height: 24,
-  },
-  footerRow: {
+  footer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 20,
+    marginTop: 32,
   },
   footerText: {
-    fontSize: 15,
+    fontSize: 14,
     fontFamily: 'Poppins_400Regular',
   },
   footerLink: {
-    fontSize: 15,
+    fontSize: 14,
     fontFamily: 'Poppins_700Bold',
   },
 });
-import { StatusBar } from 'react-native';
-
-

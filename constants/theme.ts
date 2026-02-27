@@ -63,3 +63,15 @@ export const Fonts = Platform.select({
     mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
   },
 });
+
+export const Typography = {
+  h1: 36,
+  h2: 28,
+  h3: 24,
+  h4: 20,
+  bodyLarge: 18,
+  body: 16,
+  bodySmall: 14,
+  caption: 12,
+  button: 17,
+};

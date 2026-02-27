@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Dimensions, Animated, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Animated, StatusBar } from 'react-native';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { Colors } from '@/constants/theme';
@@ -29,6 +30,8 @@ export default function LandDetailsScreen() {
                     <Image
                         source={require('@/assets/images/pexels-akos-szabo-145938-440731.jpg')}
                         style={styles.heroImage}
+                        contentFit="cover"
+                        transition={500}
                     />
                     <LinearGradient
                         colors={['rgba(0,0,0,0.5)', 'transparent', 'rgba(0,0,0,0.8)']}
