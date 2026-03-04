@@ -17,7 +17,6 @@ export default function DashboardScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: isDark ? '#0a0a0a' : '#f8fafc' }]} edges={['top']}>
       <StatusBar style={isDark ? "light" : "dark"} />
 
-      {/* Background Gradient */}
       <LinearGradient
         colors={isDark ? ['#0a0a0a', '#1a1a1a'] : ['#f8fafc', '#ffffff', '#f0fdf4']}
         style={StyleSheet.absoluteFill}
