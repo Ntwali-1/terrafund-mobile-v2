@@ -1,9 +1,9 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import { ScrollView, StyleSheet, Text, View, TouchableOpacity, Dimensions } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
+import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
@@ -17,14 +17,14 @@ export default function EarningsScreen() {
 
       {/* Background Gradient */}
       <LinearGradient
-        colors={isDark ? ['#0a0a0a', '#1a1a1a'] : ['#f8fafc', '#ffffff', '#eff6ff']}
+        colors={isDark ? ['#0a0a0a', '#1a1a1a'] : ['#f8fafc', '#ffffff', '#f0fdf4']}
         style={StyleSheet.absoluteFill}
       />
 
       {/* Decorative Elements */}
       <View style={styles.decorativeBackground}>
         <LinearGradient
-          colors={isDark ? ['rgba(59, 130, 246, 0.08)', 'transparent'] : ['rgba(59, 130, 246, 0.1)', 'transparent']}
+          colors={isDark ? ['rgba(17, 212, 33, 0.08)', 'transparent'] : ['rgba(17, 212, 33, 0.1)', 'transparent']}
           style={[styles.decorativeCircle, styles.circle1]}
         />
       </View>
@@ -42,7 +42,7 @@ export default function EarningsScreen() {
           {/* Main Earnings Card */}
           <View style={styles.heroSection}>
             <LinearGradient
-              colors={['#3b82f6', '#2563eb']}
+              colors={['#11d421', '#0fb31c']}
               style={styles.heroCard}
             >
               <View>
@@ -77,7 +77,7 @@ export default function EarningsScreen() {
               {[40, 60, 45, 80, 55, 90, 70].map((h, i) => (
                 <View key={i} style={styles.barWrapper}>
                   <LinearGradient
-                    colors={i === 5 ? ['#3b82f6', '#2563eb'] : ['#e5e7eb', '#d1d5db']}
+                    colors={i === 5 ? ['#11d421', '#0fb31c'] : ['#e5e7eb', '#d1d5db']}
                     style={[styles.bar, { height: h }]}
                   />
                   <Text style={[styles.barLabel, { color: isDark ? '#9ca3af' : '#6b7280' }]}>{['M', 'T', 'W', 'T', 'F', 'S', 'S'][i]}</Text>
@@ -95,7 +95,7 @@ export default function EarningsScreen() {
           <View style={styles.payoutList}>
             {[
               { title: 'September Yield', sub: 'Highland Ridge - Corn', amount: '+$1,240.00', date: 'Oct 02, 2023', icon: 'payments', color: '#11d421' },
-              { title: 'Quarterly Lease', sub: 'Savannah Field', amount: '+$750.00', date: 'Sep 28, 2023', icon: 'business', color: '#3b82f6' },
+              { title: 'Quarterly Lease', sub: 'Savannah Field', amount: '+$750.00', date: 'Sep 28, 2023', icon: 'business', color: '#11d421' },
               { title: 'Bonus Payout', sub: 'Platform Referral', amount: '+$50.00', date: 'Sep 15, 2023', icon: 'card-giftcard', color: '#f59e0b' }
             ].map((payout, idx) => (
               <View key={idx} style={[styles.payoutItem, {
@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
-    shadowColor: '#3b82f6',
+    shadowColor: '#11d421',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.2,
     shadowRadius: 15,
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
   viewAll: {
     fontSize: 14,
     fontFamily: 'Poppins_700Bold',
-    color: '#3b82f6',
+    color: '#11d421',
   },
   chartContainer: {
     marginHorizontal: 24,

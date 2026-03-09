@@ -1,13 +1,12 @@
-import { MaterialIcons, Ionicons, FontAwesome5 } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Dimensions, StatusBar } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Colors } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { MotiView, MotiText } from 'moti';
-import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
+import { MotiText, MotiView } from 'moti';
+import { useState } from 'react';
+import { Alert, Dimensions, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width, height } = Dimensions.get('window');
 
@@ -148,7 +147,7 @@ export default function LoginScreen() {
             <View style={styles.form}>
               <View style={styles.inputGroup}>
                 <Text style={[styles.label, { color: focusedInput === 'email' ? theme.tint : theme.textSecondary }]}>
-                  EMAIL ADDRESS
+                  Email Address
                 </Text>
                 <TextInput
                   style={[
@@ -172,7 +171,7 @@ export default function LoginScreen() {
               <View style={[styles.inputGroup, { marginTop: 24 }]}>
                 <View style={styles.labelRow}>
                   <Text style={[styles.label, { color: focusedInput === 'password' ? theme.tint : theme.textSecondary }]}>
-                    PASSWORD
+                    Password
                   </Text>
                   <TouchableOpacity>
                     <Text style={[styles.forgotText, { color: theme.tint }]}>Forgot?</Text>
@@ -330,10 +329,10 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   label: {
-    fontSize: 10,
-    fontFamily: 'Poppins_700Bold',
-    letterSpacing: 1.2,
-    marginBottom: 4,
+    fontSize: 14,
+    fontFamily: 'Poppins_600SemiBold',
+    letterSpacing: 0.3,
+    marginBottom: 6,
   },
   labelRow: {
     flexDirection: 'row',
@@ -342,9 +341,9 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   modernInput: {
-    fontSize: 15,
+    fontSize: 16,
     fontFamily: 'Poppins_500Medium',
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderBottomWidth: 1.5,
   },
   passwordWrapper: {
