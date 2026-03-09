@@ -92,7 +92,11 @@ export default function LandownerDashboard() {
 
           {/* Post Land CTA */}
           <View style={styles.section}>
-            <TouchableOpacity activeOpacity={0.9} style={[styles.ctaCard, { backgroundColor: '#11d421' }]}>
+            <TouchableOpacity 
+              activeOpacity={0.9} 
+              style={[styles.ctaCard, { backgroundColor: '#11d421' }]}
+              onPress={() => router.push('/(landowner-tabs)/register-land')}
+            >
               <View style={styles.ctaContent}>
                 <View style={styles.ctaIcon}>
                   <MaterialIcons name="add-circle" size={32} color="white" />
@@ -279,7 +283,7 @@ const styles = StyleSheet.create({
     borderColor: '#ffffff',
   },
   scrollContent: {
-    paddingBottom: 40,
+    paddingBottom: 120,
   },
   section: {
     paddingHorizontal: 24,

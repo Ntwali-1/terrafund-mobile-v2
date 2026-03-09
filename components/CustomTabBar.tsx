@@ -6,11 +6,11 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
     const insets = useSafeAreaInsets();
 
     return (
-        <View style={[styles.tabBar, { paddingBottom: 0 }]}>
+        <View style={[styles.tabBar, { paddingBottom: insets.bottom > 0 ? insets.bottom - 10 : 8 }]}>
             {state.routes.map((route, index) => {
                 const { options } = descriptors[route.key];
                 const isFocused = state.index === index;
-                const isMiddle = index === Math.floor(state.routes.length / 2);
+                const isMiddle = index === 2; // Middle button for 5 tabs (index 2)
 
                 const onPress = () => {
                     const event = navigation.emit({
@@ -31,7 +31,6 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
                     });
                 };
 
-                // Use the defined colors from options
                 const activeColor = options.tabBarActiveTintColor || '#11d421';
                 const inactiveColor = options.tabBarInactiveTintColor || 'gray';
                 const color = isFocused ? activeColor : inactiveColor;
@@ -42,7 +41,6 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
                         accessibilityRole="button"
                         accessibilityState={isFocused ? { selected: true } : {}}
                         accessibilityLabel={options.tabBarAccessibilityLabel}
-                        testID={options.tabBarTestID}
                         onPress={onPress}
                         onLongPress={onLongPress}
                         style={styles.tabItem}
@@ -58,7 +56,7 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
                                     <View style={[styles.activeIndicator, { backgroundColor: activeColor }]} />
                                 )}
                                 <View style={styles.iconWrapper}>
-                                    {options.tabBarIcon?.({ focused: isFocused, color: color, size: 28 })}
+                                    {options.tabBarIcon?.({ focused: isFocused, color: color, size: 26 })}
                                 </View>
                             </View>
                         )}
@@ -72,12 +70,12 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
 const styles = StyleSheet.create({
     tabBar: {
         position: 'absolute',
-        bottom: 25,
+        bottom: 20,
         left: 20,
         right: 20,
         height: 70,
         backgroundColor: '#ffffff',
-        borderRadius: 35,
+        borderRadius: 24,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-around',
@@ -89,6 +87,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 10,
         elevation: 8,
+        paddingHorizontal: 8,
     },
     tabItem: {
         flex: 1,
@@ -101,24 +100,26 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         height: '100%',
         width: '100%',
+        position: 'relative',
     },
     activeIndicator: {
         position: 'absolute',
-        top: 0, // stick to the very top of the tabItem if possible, or give some padding
-        width: 20,
+        top: 12,
+        width: 24,
         height: 3,
         borderRadius: 2,
     },
     iconWrapper: {
-        // optional spacing for icon
-    },
-    middleButton: {
-        width: 65,
-        height: 65,
-        borderRadius: 22,
         alignItems: 'center',
         justifyContent: 'center',
-        shadowColor: '#11d421', // will be overridden or blend depending on activeColor
+    },
+    middleButton: {
+        width: 60,
+        height: 60,
+        borderRadius: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#11d421',
         shadowOffset: {
             width: 0,
             height: 4,
@@ -126,6 +127,6 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.3,
         shadowRadius: 8,
         elevation: 10,
-        transform: [{ translateY: -15 }],
+        transform: [{ translateY: -10 }],
     },
 });

@@ -1,9 +1,9 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import { ScrollView, StyleSheet, Text, View, TouchableOpacity, Image, Dimensions, TextInput } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
+import { Dimensions, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
@@ -120,7 +120,7 @@ export default function InvestorsScreen() {
               </TouchableOpacity>
             ))}
           </View>
-          <View style={{ height: 40 }} />
+          <View style={{ height: 120 }} />
         </ScrollView>
       </View>
     </SafeAreaView>

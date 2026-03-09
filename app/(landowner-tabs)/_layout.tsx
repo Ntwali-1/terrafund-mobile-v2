@@ -55,6 +55,12 @@ export default function LandownerTabLayout() {
           tabBarIcon: ({ color }) => <MaterialIcons size={28} name="person" color={color} />,
         }}
       />
+      <Tabs.Screen
+        name="register-land"
+        options={{
+          href: null, // Hide from tab bar
+        }}
+      />
     </Tabs>
   );
 }
