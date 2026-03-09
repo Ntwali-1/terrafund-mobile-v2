@@ -39,7 +39,7 @@ const FarmCard: React.FC<FarmCardProps> = ({
   return (
     <TouchableOpacity
       activeOpacity={0.9}
-      onPress={() => router.push("/land-investment-details")}
+      onPress={() => router.push("/investor/land-details")}
       style={[styles.card, {
         backgroundColor: isDark ? '#1a1a1a' : '#ffffff',
         borderColor: isDark ? '#333333' : '#eeeeee'

@@ -409,19 +409,19 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   appName: {
-    fontSize: 48,
+    fontSize: 36,
     fontFamily: 'Aclonica_400Regular',
     color: '#11d421',
-    letterSpacing: -1,
+    letterSpacing: -0.5,
     textAlign: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   tagline: {
-    fontSize: 17,
+    fontSize: 16,
     textAlign: 'center',
-    lineHeight: 26,
+    lineHeight: 24,
     fontWeight: '600',
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
     fontFamily: 'Poppins_500Medium',
   },
   featuresSection: {
@@ -523,7 +523,7 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     color: '#ffffff',
-    fontSize: 19,
+    fontSize: 17,
     fontWeight: '900',
     letterSpacing: 0.5,
     fontFamily: 'Poppins_800ExtraBold',
@@ -550,7 +550,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   secondaryButtonText: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '800',
     letterSpacing: 0.3,
     fontFamily: 'Poppins_700Bold',

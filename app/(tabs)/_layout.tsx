@@ -7,7 +7,7 @@ import { CustomTabBar } from '@/components/CustomTabBar';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const { colorScheme, isDark } = useColorScheme();
 
   return (
     <Tabs
@@ -17,20 +17,22 @@ export default function TabLayout() {
         tabBarInactiveTintColor: 'gray',
         tabBarShowLabel: false,
         headerShown: false,
-        tabBarStyle: Platform.select({
-          ios: {
-            position: 'absolute',
-            height: 88,
-            paddingBottom: 30,
-          },
-          default: {
-            height: 64,
-            paddingBottom: 10,
-            bottom: 32,
-            borderBottomLeftRadius: 24,
-            borderBottomRightRadius: 24,
-          },
-        }),
+        tabBarStyle: {
+          position: 'absolute',
+          bottom: Platform.OS === 'ios' ? 24 : 16,
+          left: 16,
+          right: 16,
+          height: 68,
+          borderRadius: 24,
+          backgroundColor: isDark ? '#1a1a1a' : '#fff',
+          borderTopWidth: 0,
+          paddingBottom: Platform.OS === 'ios' ? 0 : 4,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 10 },
+          shadowOpacity: isDark ? 0.3 : 0.1,
+          shadowRadius: 20,
+          elevation: 10,
+        },
       }}>
       <Tabs.Screen
         name="index"

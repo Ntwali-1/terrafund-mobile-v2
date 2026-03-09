@@ -71,29 +71,25 @@ export default function RoleSelectionScreen() {
             style={[
               styles.roleCard,
               {
-                backgroundColor: selectedRole === 'INVESTOR' 
-                  ? (isDark ? 'rgba(17, 212, 33, 0.12)' : 'rgba(17, 212, 33, 0.08)')
-                  : (isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.9)'),
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.9)',
                 borderColor: selectedRole === 'INVESTOR' ? '#11d421' : (isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'),
-                borderWidth: selectedRole === 'INVESTOR' ? 2 : 1,
+                transform: [{ scale: selectedRole === 'INVESTOR' ? 1.02 : 1 }]
               }
             ]}
           >
-            <LinearGradient
-              colors={selectedRole === 'INVESTOR' 
-                ? (isDark ? ['rgba(17, 212, 33, 0.15)', 'rgba(17, 212, 33, 0.05)'] : ['rgba(17, 212, 33, 0.1)', 'rgba(17, 212, 33, 0.02)'])
-                : ['transparent', 'transparent']
-              }
-              style={StyleSheet.absoluteFill}
-            />
+            {selectedRole === 'INVESTOR' && (
+              <View
+                style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(17, 212, 33, 0.05)' }]}
+              />
+            )}
 
             <View style={[styles.iconContainer, {
-              backgroundColor: selectedRole === 'INVESTOR' ? '#11d421' : (isDark ? 'rgba(17, 212, 33, 0.15)' : 'rgba(17, 212, 33, 0.1)')
+              backgroundColor: selectedRole === 'INVESTOR' ? '#11d421' : (isDark ? 'rgba(255, 255, 255, 0.1)' : '#f3f4f6')
             }]}>
               <MaterialIcons
                 name="trending-up"
                 size={32}
-                color={selectedRole === 'INVESTOR' ? '#ffffff' : '#11d421'}
+                color={selectedRole === 'INVESTOR' ? '#ffffff' : (isDark ? '#d1d5db' : '#6b7280')}
               />
             </View>
 

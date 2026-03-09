@@ -1,7 +1,3 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
 
 import { Platform } from 'react-native';
 
@@ -67,3 +63,15 @@ export const Fonts = Platform.select({
     mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
   },
 });
+
+export const Typography = {
+  h1: 36,
+  h2: 28,
+  h3: 24,
+  h4: 20,
+  bodyLarge: 18,
+  body: 16,
+  bodySmall: 14,
+  caption: 12,
+  button: 17,
+};
