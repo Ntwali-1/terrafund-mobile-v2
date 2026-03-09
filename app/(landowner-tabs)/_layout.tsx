@@ -1,3 +1,4 @@
+import { CustomTabBar } from '@/components/CustomTabBar';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import React from 'react';
@@ -6,9 +7,11 @@ import { Platform } from 'react-native';
 export default function LandownerTabLayout() {
   return (
     <Tabs
+      tabBar={props => <CustomTabBar {...props} />}
       screenOptions={{
         tabBarActiveTintColor: '#11d421',
         tabBarInactiveTintColor: 'gray',
+        tabBarShowLabel: false,
         headerShown: false,
         tabBarStyle: Platform.select({
           ios: {

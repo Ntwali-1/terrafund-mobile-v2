@@ -3,6 +3,7 @@ import { Tabs } from 'expo-router';
 import React from 'react';
 import { Platform } from 'react-native';
 
+import { CustomTabBar } from '@/components/CustomTabBar';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function TabLayout() {
@@ -10,14 +11,11 @@ export default function TabLayout() {
 
   return (
     <Tabs
+      tabBar={props => <CustomTabBar {...props} />}
       screenOptions={{
         tabBarActiveTintColor: '#11d421',
         tabBarInactiveTintColor: 'gray',
-        tabBarLabelStyle: {
-          fontFamily: 'Poppins_500Medium',
-          fontSize: 11,
-          marginBottom: 4,
-        },
+        tabBarShowLabel: false,
         headerShown: false,
         tabBarStyle: Platform.select({
           ios: {

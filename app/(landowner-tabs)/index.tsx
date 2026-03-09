@@ -1,9 +1,9 @@
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Image, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View, Dimensions } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { StatusBar } from 'expo-status-bar';
+import { Dimensions, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width, height } = Dimensions.get('window');
 
@@ -156,7 +156,7 @@ export default function LandownerDashboard() {
                 <Text style={[styles.projectLocation, { color: isDark ? '#9ca3af' : '#6b7280' }]}>
                   Kumasi, Ashanti Region • 5.2 Ha
                 </Text>
-                <div style={styles.projectStats}>
+                <View style={styles.projectStats}>
                   <View style={styles.projectStat}>
                     <MaterialIcons name="people" size={16} color="#11d421" />
                     <Text style={[styles.projectStatText, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>
@@ -169,7 +169,7 @@ export default function LandownerDashboard() {
                       45 days left
                     </Text>
                   </View>
-                </div>
+                </View>
                 <View style={styles.progressContainer}>
                   <View style={styles.progressHeader}>
                     <Text style={[styles.progressLabel, { color: isDark ? '#9ca3af' : '#6b7280' }]}>Growth Cycle</Text>
