@@ -4,9 +4,10 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
+import { useAuth } from '@/src/utils/auth';
+import { Role } from '@/src/utils/api';
 
 type RoleType = 'INVESTOR' | 'LANDOWNER' | null;
 
@@ -15,12 +16,28 @@ export default function RoleSelectionScreen() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
   const [selectedRole, setSelectedRole] = useState<RoleType>(null);
+  const [loading, setLoading] = useState(false);
+  const { selectRole } = useAuth();
 
-  const handleContinue = () => {
-    if (selectedRole === 'INVESTOR') {
-      router.replace('/(tabs)');
-    } else if (selectedRole === 'LANDOWNER') {
-      router.replace('/(landowner-tabs)');
+  const handleContinue = async () => {
+    if (!selectedRole) {
+      Alert.alert('Error', 'Please select a role to continue');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await selectRole(selectedRole === 'INVESTOR' ? Role.INVESTOR : Role.LAND_OWNER);
+      
+      if (selectedRole === 'INVESTOR') {
+        router.replace('/(tabs)');
+      } else if (selectedRole === 'LANDOWNER') {
+        router.replace('/(landowner-tabs)');
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to select role. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -164,7 +181,7 @@ export default function RoleSelectionScreen() {
         <TouchableOpacity
           style={[styles.continueButton, !selectedRole && styles.disabledButton]}
           onPress={handleContinue}
-          disabled={!selectedRole}
+          disabled={!selectedRole || loading}
           activeOpacity={0.8}
         >
           <View
@@ -174,7 +191,7 @@ export default function RoleSelectionScreen() {
             ]}
           >
             <Text style={[styles.continueButtonText, !selectedRole && styles.disabledButtonText]}>
-              Continue
+              {loading ? 'Selecting Role...' : 'Continue'}
             </Text>
             <MaterialIcons
               name="arrow-forward"

@@ -7,6 +7,8 @@ import { MotiText, MotiView } from 'moti';
 import { useState } from 'react';
 import { Alert, Dimensions, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuth } from '@/src/utils/auth';
+import { Role } from '@/src/utils/api';
 
 const { width, height } = Dimensions.get('window');
 
@@ -49,6 +51,7 @@ export default function LoginScreen() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
   const theme = isDark ? Colors.dark : Colors.light;
+  const { login, user } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -62,11 +65,43 @@ export default function LoginScreen() {
       return;
     }
 
-    setLoading(true);
-    setTimeout(() => {
+    try {
+      setLoading(true);
+      const result = await login(email, password);
+      
+      // Use the user data returned from login, not the context state
+      const loggedInUser = result.user;
+      
+      // Check if user has roles selected
+      if (loggedInUser && loggedInUser.roles && loggedInUser.roles.length > 0) {
+        // User has roles, navigate to appropriate dashboard
+        const hasInvestorRole = loggedInUser.roles.includes(Role.INVESTOR);
+        const hasLandOwnerRole = loggedInUser.roles.includes(Role.LAND_OWNER);
+        
+        if (hasInvestorRole) {
+          Alert.alert('Success', 'Login successful!', [
+            { text: 'OK', onPress: () => router.replace('/(tabs)') }
+          ]);
+        } else if (hasLandOwnerRole) {
+          Alert.alert('Success', 'Login successful!', [
+            { text: 'OK', onPress: () => router.replace('/(landowner-tabs)') }
+          ]);
+        } else {
+          Alert.alert('Success', 'Login successful! Please select your role.', [
+            { text: 'OK', onPress: () => router.replace('/auth/role-selection') }
+          ]);
+        }
+      } else {
+        // No roles selected, go to role selection
+        Alert.alert('Success', 'Login successful! Please select your role.', [
+          { text: 'OK', onPress: () => router.replace('/auth/role-selection') }
+        ]);
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Login failed. Please check your credentials and try again.');
+    } finally {
       setLoading(false);
-      router.replace('/auth/role-selection');
-    }, 1500);
+    }
   };
 
   return (

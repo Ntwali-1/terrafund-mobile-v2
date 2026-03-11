@@ -7,6 +7,7 @@ import { MotiText, MotiView } from 'moti';
 import { useState } from 'react';
 import { Alert, Dimensions, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuth } from '@/src/utils/auth';
 
 const { width, height } = Dimensions.get('window');
 
@@ -49,6 +50,7 @@ export default function SignupScreen() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
   const theme = isDark ? Colors.dark : Colors.light;
+  const { signup } = useAuth();
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -61,6 +63,9 @@ export default function SignupScreen() {
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
 
   const handleSignup = async () => {
+    console.log('Signup button clicked!');
+    console.log('Form data:', { email, password, fullName, phoneNumber, agreedToTerms });
+    
     if (!fullName || !email || !password || !confirmPassword) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
@@ -76,11 +81,39 @@ export default function SignupScreen() {
       return;
     }
 
-    setLoading(true);
-    setTimeout(() => {
+    try {
+      console.log('DEBUG: Starting signup process...');
+      setLoading(true);
+      console.log('DEBUG: Calling signup API...');
+      const result = await signup(email, password, fullName, phoneNumber || undefined);
+      console.log('DEBUG: Signup API returned:', result);
+      console.log('DEBUG: About to show success alert');
+      if (Platform.OS === 'web') {
+        window.alert('Account created successfully! Please check your email to verify your account.');
+        console.log('DEBUG: Web alert dismissed, navigating...');
+        router.push('/auth/verify-email');
+      } else {
+        Alert.alert(
+          'Success', 
+          'Account created successfully! Please check your email to verify your account.',
+          [
+            { 
+              text: 'OK', 
+              onPress: () => {
+                console.log('DEBUG: OK pressed, navigating...');
+                router.push('/auth/verify-email');
+              }
+            }
+          ]
+        );
+      }
+      console.log('DEBUG: Alert handled');
+    } catch (error: any) {
+      console.error('Signup error:', error);
+      Alert.alert('Error', error.message || 'Failed to create account. Please try again.');
+    } finally {
       setLoading(false);
-      router.push('/auth/verify-email');
-    }, 1500);
+    }
   };
 
   return (
