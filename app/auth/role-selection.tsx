@@ -41,11 +41,7 @@ export default function RoleSelectionScreen() {
       });
 
       setTimeout(() => {
-        if (selectedRole === 'INVESTOR') {
-          router.replace('/(tabs)');
-        } else if (selectedRole === 'LANDOWNER') {
-          router.replace('/(landowner-tabs)');
-        }
+        router.replace('/auth/complete-profile');
       }, 1500);
 
     } catch (error: any) {

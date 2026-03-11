@@ -1,32 +1,33 @@
-import { MaterialIcons, Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useState, useRef } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, ScrollView, Dimensions, TextInput, Image, Animated } from 'react-native';
+import { useState } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View, ScrollView, TextInput } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Colors } from '@/constants/theme';
 import { MotiView } from 'moti';
-
-const { width } = Dimensions.get('window');
+import Toast from 'react-native-toast-message';
+import { apiClient, Role } from '@/src/utils/api';
+import { useAuth } from '@/src/utils/auth';
 
 const STEPS = [
     {
         title: 'Basic Info',
         description: 'Tell us a bit about yourself',
-        fields: ['username', 'bio'],
+        fields: ['bio'],
         icon: 'person-outline'
     },
     {
-        title: 'Location',
+        title: 'Location - Region',
         description: 'Where are you based?',
-        fields: ['country', 'city'],
-        icon: 'location-outline'
+        fields: ['country', 'province', 'district'],
+        icon: 'map-outline'
     },
     {
-        title: 'Interests',
-        description: 'What are you interested in?',
-        fields: ['crops', 'budget'],
-        icon: 'leaf-outline'
+        title: 'Location - Local',
+        description: 'More specific location details',
+        fields: ['sector', 'cell', 'village', 'streetAddress'],
+        icon: 'location-outline'
     }
 ];
 
@@ -36,23 +37,76 @@ export default function CompleteProfileScreen() {
     const { colorScheme } = useColorScheme();
     const isDark = colorScheme === 'dark';
     const theme = isDark ? Colors.dark : Colors.light;
+    const { user, login } = useAuth(); // Might need context update after? or just rely on API
 
     const [currentStep, setCurrentStep] = useState(0);
-    const scrollX = useRef(new Animated.Value(0)).current;
+    const [loading, setLoading] = useState(false);
+    
+    // Form State matching UpdateProfileRequest
+    const [formData, setFormData] = useState({
+        bio: '',
+        country: '',
+        province: '',
+        district: '',
+        sector: '',
+        cell: '',
+        village: '',
+        streetAddress: ''
+    });
 
     const progress = ((currentStep + 1) / STEPS.length) * 100;
 
-    const handleNext = () => {
+    const handleChange = (field: string, value: string) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+    };
+
+    const navigateToDashboard = () => {
+        const hasInvestorRole = user?.roles?.includes(Role.INVESTOR);
+        if (hasInvestorRole) {
+            router.replace('/(tabs)');
+        } else {
+            router.replace('/(landowner-tabs)');
+        }
+    };
+
+    const handleNext = async () => {
         if (currentStep < STEPS.length - 1) {
             setCurrentStep(currentStep + 1);
         } else {
-            router.replace('/(tabs)');
+            // Final submission
+            try {
+                setLoading(true);
+                await apiClient.updateCurrentUser(formData);
+
+                Toast.show({
+                    type: 'success',
+                    text1: 'Profile Updated',
+                    text2: 'Your profile has been successfully completed.',
+                });
+
+                setTimeout(() => {
+                    navigateToDashboard();
+                }, 1500);
+
+            } catch (error: any) {
+                Toast.show({
+                    type: 'error',
+                    text1: 'Update Failed',
+                    text2: error.message || 'Failed to update profile.',
+                });
+            } finally {
+                setLoading(false);
+            }
         }
+    };
+
+    const handleSkip = () => {
+        navigateToDashboard();
     };
 
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-            <View style={styles.header}>
+            <View style={[styles.header, { paddingTop: insets.top }]}>
                 <View style={styles.progressContainer}>
                     <View style={[styles.progressBar, { backgroundColor: isDark ? '#333' : '#eee' }]}>
                         <MotiView
@@ -62,7 +116,7 @@ export default function CompleteProfileScreen() {
                     </View>
                     <Text style={[styles.progressText, { color: theme.textSecondary }]}>{Math.round(progress)}% Complete</Text>
                 </View>
-                <TouchableOpacity onPress={() => router.replace('/(tabs)')}>
+                <TouchableOpacity onPress={handleSkip}>
                     <Text style={[styles.skipText, { color: theme.tint }]}>Skip</Text>
                 </TouchableOpacity>
             </View>
@@ -70,6 +124,7 @@ export default function CompleteProfileScreen() {
             <ScrollView
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
             >
                 <MotiView
                     from={{ opacity: 0, translateX: 50 }}
@@ -86,11 +141,23 @@ export default function CompleteProfileScreen() {
                     <View style={styles.form}>
                         {STEPS[currentStep].fields.map((field) => (
                             <View key={field} style={styles.inputGroup}>
-                                <Text style={[styles.label, { color: theme.textSecondary }]}>{field.charAt(0).toUpperCase() + field.slice(1)}</Text>
+                                <Text style={[styles.label, { color: theme.textSecondary }]}>
+                                    {field === 'bio' ? 'Bio' :
+                                     field === 'streetAddress' ? 'Street Address' :
+                                     field.charAt(0).toUpperCase() + field.slice(1)}
+                                </Text>
                                 <TextInput
-                                    style={[styles.input, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f9fafb', borderColor: theme.border, color: theme.text }]}
+                                    style={[
+                                        styles.input, 
+                                        { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f9fafb', borderColor: theme.border, color: theme.text },
+                                        field === 'bio' && styles.textArea
+                                    ]}
                                     placeholder={`Enter your ${field}`}
                                     placeholderTextColor="#888"
+                                    value={(formData as any)[field]}
+                                    onChangeText={(text) => handleChange(field, text)}
+                                    multiline={field === 'bio'}
+                                    numberOfLines={field === 'bio' ? 4 : 1}
                                 />
                             </View>
                         ))}
@@ -98,15 +165,16 @@ export default function CompleteProfileScreen() {
                 </MotiView>
             </ScrollView>
 
-            <View style={[styles.footer, { borderTopColor: theme.border }]}>
+            <View style={[styles.footer, { borderTopColor: theme.border, paddingBottom: Math.max(insets.bottom, 24) }]}>
                 <TouchableOpacity
                     style={[styles.primaryButton, { backgroundColor: theme.tint }]}
                     onPress={handleNext}
+                    disabled={loading}
                 >
-                    <Text style={styles.buttonText}>{currentStep === STEPS.length - 1 ? 'Finish' : 'Continue'}</Text>
-                    <Ionicons name="arrow-forward" size={20} color="#fff" />
+                    <Text style={styles.buttonText}>{loading ? 'Saving...' : currentStep === STEPS.length - 1 ? 'Finish' : 'Continue'}</Text>
+                    {!loading && <Ionicons name={currentStep === STEPS.length - 1 ? "checkmark" : "arrow-forward"} size={20} color="#fff" />}
                 </TouchableOpacity>
-                {currentStep > 0 && (
+                {currentStep > 0 && !loading && (
                     <TouchableOpacity
                         style={styles.backButton}
                         onPress={() => setCurrentStep(currentStep - 1)}
@@ -154,6 +222,7 @@ const styles = StyleSheet.create({
     scrollContent: {
         paddingHorizontal: 24,
         paddingTop: 40,
+        paddingBottom: 40,
     },
     stepContent: {
         alignItems: 'center',
@@ -197,6 +266,11 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         fontSize: 16,
         fontFamily: 'Poppins_400Regular',
+    },
+    textArea: {
+        height: 120,
+        paddingTop: 16,
+        textAlignVertical: 'top',
     },
     footer: {
         padding: 24,

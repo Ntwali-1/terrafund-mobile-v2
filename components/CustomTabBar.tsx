@@ -1,16 +1,26 @@
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
     const insets = useSafeAreaInsets();
+    const { colorScheme } = useColorScheme();
+    const isDark = colorScheme === 'dark';
 
     return (
-        <View style={[styles.tabBar, { paddingBottom: insets.bottom > 0 ? insets.bottom - 10 : 8 }]}>
+        <View style={[
+            styles.tabBar, 
+            { 
+                backgroundColor: isDark ? '#1a1a1a' : '#ffffff',
+                shadowColor: isDark ? '#000' : '#11d421',
+                bottom: insets.bottom > 0 ? insets.bottom + 10 : 20
+            }
+        ]}>
             {state.routes.map((route, index) => {
                 const { options } = descriptors[route.key];
                 const isFocused = state.index === index;
-                const isMiddle = index === 2; // Middle button for 5 tabs (index 2)
+                const isMiddle = index === Math.floor(state.routes.length / 2); // Dynamic middle button
 
                 const onPress = () => {
                     const event = navigation.emit({
@@ -48,16 +58,16 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
                     >
                         {isMiddle ? (
                             <View style={[styles.middleButton, { backgroundColor: activeColor }]}>
-                                {options.tabBarIcon?.({ focused: isFocused, color: '#ffffff', size: 28 })}
+                                {options.tabBarIcon?.({ focused: isFocused, color: '#ffffff', size: 30 })}
                             </View>
                         ) : (
-                            <View style={styles.iconContainer}>
+                            <View style={[styles.iconContainer, isFocused && { backgroundColor: isDark ? 'rgba(17, 212, 33, 0.15)' : 'rgba(17, 212, 33, 0.1)' }]}>
+                                <View style={styles.iconWrapper}>
+                                    {options.tabBarIcon?.({ focused: isFocused, color: color, size: 24 })}
+                                </View>
                                 {isFocused && (
                                     <View style={[styles.activeIndicator, { backgroundColor: activeColor }]} />
                                 )}
-                                <View style={styles.iconWrapper}>
-                                    {options.tabBarIcon?.({ focused: isFocused, color: color, size: 26 })}
-                                </View>
                             </View>
                         )}
                     </TouchableOpacity>
@@ -70,24 +80,21 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
 const styles = StyleSheet.create({
     tabBar: {
         position: 'absolute',
-        bottom: 20,
         left: 20,
         right: 20,
-        height: 70,
-        backgroundColor: '#ffffff',
-        borderRadius: 24,
+        height: 72,
+        borderRadius: 36, // pill shape
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-around',
-        shadowColor: '#000000',
+        justifyContent: 'space-between',
+        paddingHorizontal: 16,
         shadowOffset: {
             width: 0,
-            height: 4,
+            height: 8,
         },
-        shadowOpacity: 0.1,
-        shadowRadius: 10,
-        elevation: 8,
-        paddingHorizontal: 8,
+        shadowOpacity: 0.15,
+        shadowRadius: 20,
+        elevation: 10,
     },
     tabItem: {
         flex: 1,
@@ -98,35 +105,36 @@ const styles = StyleSheet.create({
     iconContainer: {
         alignItems: 'center',
         justifyContent: 'center',
-        height: '100%',
-        width: '100%',
+        height: 48,
+        width: 48,
+        borderRadius: 24,
         position: 'relative',
-    },
-    activeIndicator: {
-        position: 'absolute',
-        top: 12,
-        width: 24,
-        height: 3,
-        borderRadius: 2,
     },
     iconWrapper: {
         alignItems: 'center',
         justifyContent: 'center',
     },
+    activeIndicator: {
+        position: 'absolute',
+        bottom: 6,
+        width: 16,
+        height: 3,
+        borderRadius: 2,
+    },
     middleButton: {
-        width: 60,
-        height: 60,
-        borderRadius: 20,
+        width: 64,
+        height: 64,
+        borderRadius: 32,
         alignItems: 'center',
         justifyContent: 'center',
         shadowColor: '#11d421',
         shadowOffset: {
             width: 0,
-            height: 4,
+            height: 6,
         },
         shadowOpacity: 0.3,
-        shadowRadius: 8,
+        shadowRadius: 12,
         elevation: 10,
-        transform: [{ translateY: -10 }],
+        transform: [{ translateY: -15 }],
     },
 });
