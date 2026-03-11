@@ -4,7 +4,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View, Alert } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/src/utils/auth';
 import { Role } from '@/src/utils/api';
@@ -21,7 +22,11 @@ export default function RoleSelectionScreen() {
 
   const handleContinue = async () => {
     if (!selectedRole) {
-      Alert.alert('Error', 'Please select a role to continue');
+      Toast.show({
+        type: 'error',
+        text1: 'Role Required',
+        text2: 'Please select a role to continue.',
+      });
       return;
     }
 
@@ -29,13 +34,26 @@ export default function RoleSelectionScreen() {
       setLoading(true);
       await selectRole(selectedRole === 'INVESTOR' ? Role.INVESTOR : Role.LAND_OWNER);
       
-      if (selectedRole === 'INVESTOR') {
-        router.replace('/(tabs)');
-      } else if (selectedRole === 'LANDOWNER') {
-        router.replace('/(landowner-tabs)');
-      }
+      Toast.show({
+        type: 'success',
+        text1: 'Role Assigned',
+        text2: `Successfully joined as ${selectedRole === 'INVESTOR' ? 'an Investor' : 'a Landowner'}.`,
+      });
+
+      setTimeout(() => {
+        if (selectedRole === 'INVESTOR') {
+          router.replace('/(tabs)');
+        } else if (selectedRole === 'LANDOWNER') {
+          router.replace('/(landowner-tabs)');
+        }
+      }, 1500);
+
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to select role. Please try again.');
+      Toast.show({
+        type: 'error',
+        text1: 'Role Selection Failed',
+        text2: error.message || 'Failed to select role. Please try again.',
+      });
     } finally {
       setLoading(false);
     }
