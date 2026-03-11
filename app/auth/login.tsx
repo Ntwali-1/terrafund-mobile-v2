@@ -5,7 +5,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { MotiText, MotiView } from 'moti';
 import { useState } from 'react';
-import { Alert, Dimensions, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Dimensions, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/src/utils/auth';
 import { Role } from '@/src/utils/api';
@@ -59,9 +60,27 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
 
+  const validateEmail = (emailStr: string) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(emailStr);
+  };
+
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Toast.show({
+        type: 'error',
+        text1: 'Missing Fields',
+        text2: 'Please fill in all fields to sign in.',
+      });
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      Toast.show({
+        type: 'error',
+        text1: 'Invalid Email',
+        text2: 'Please enter a valid email address.',
+      });
       return;
     }
 
@@ -78,27 +97,40 @@ export default function LoginScreen() {
         const hasInvestorRole = loggedInUser.roles.includes(Role.INVESTOR);
         const hasLandOwnerRole = loggedInUser.roles.includes(Role.LAND_OWNER);
         
-        if (hasInvestorRole) {
-          Alert.alert('Success', 'Login successful!', [
-            { text: 'OK', onPress: () => router.replace('/(tabs)') }
-          ]);
-        } else if (hasLandOwnerRole) {
-          Alert.alert('Success', 'Login successful!', [
-            { text: 'OK', onPress: () => router.replace('/(landowner-tabs)') }
-          ]);
-        } else {
-          Alert.alert('Success', 'Login successful! Please select your role.', [
-            { text: 'OK', onPress: () => router.replace('/auth/role-selection') }
-          ]);
-        }
+        Toast.show({
+          type: 'success',
+          text1: 'Welcome back!',
+          text2: 'Login successful.',
+        });
+
+        setTimeout(() => {
+          if (hasInvestorRole) {
+            router.replace('/(tabs)');
+          } else if (hasLandOwnerRole) {
+            router.replace('/(landowner-tabs)');
+          } else {
+            router.replace('/auth/role-selection');
+          }
+        }, 1000);
+
       } else {
         // No roles selected, go to role selection
-        Alert.alert('Success', 'Login successful! Please select your role.', [
-          { text: 'OK', onPress: () => router.replace('/auth/role-selection') }
-        ]);
+        Toast.show({
+          type: 'success',
+          text1: 'Login successful!',
+          text2: 'Please select your role.',
+        });
+
+        setTimeout(() => {
+          router.replace('/auth/role-selection');
+        }, 1000);
       }
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Login failed. Please check your credentials and try again.');
+      Toast.show({
+        type: 'error',
+        text1: 'Login Failed',
+        text2: error.message || 'Please check your credentials and try again.',
+      });
     } finally {
       setLoading(false);
     }

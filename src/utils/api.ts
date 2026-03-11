@@ -3,8 +3,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import Constants from 'expo-constants';
 
-// For mobile development, use your computer's IP address instead of localhost
-// We try to get it automatically from Expo Constants, with a fallback to your known IP
 const getApiBaseUrl = () => {
   // Constants.expoConfig.hostUri typically contains the IP:Port of the dev server
   const hostUri = Constants.expoConfig?.hostUri;
@@ -14,7 +12,7 @@ const getApiBaseUrl = () => {
     return `http://${ip}:8080`;
   }
   // Fallback to the IP address from your ipconfig output (Wi-Fi adapter)
-  return 'http://192.168.43.187:8080';
+  return 'http://localhost:8080';
 };
 
 const API_BASE_URL = getApiBaseUrl();

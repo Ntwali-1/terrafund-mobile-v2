@@ -5,7 +5,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { MotiText, MotiView } from 'moti';
 import { useState } from 'react';
-import { Alert, Dimensions, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Dimensions, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/src/utils/auth';
 
@@ -62,55 +63,87 @@ export default function SignupScreen() {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
 
+  const validateEmail = (emailStr: string) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(emailStr);
+  };
+
+  const validatePassword = (pwd: string) => {
+    // Basic rules: min 8 chars, at least one letter and one number
+    if (pwd.length < 8) return false;
+    if (!/[A-Za-z]/.test(pwd)) return false;
+    if (!/[0-9]/.test(pwd)) return false;
+    return true;
+  };
+
   const handleSignup = async () => {
-    console.log('Signup button clicked!');
-    console.log('Form data:', { email, password, fullName, phoneNumber, agreedToTerms });
-    
-    if (!fullName || !email || !password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all required fields');
+    if (!fullName || !email || !phoneNumber || !password || !confirmPassword) {
+      Toast.show({
+        type: 'error',
+        text1: 'Missing Fields',
+        text2: 'Please fill in all required fields including your phone number.',
+      });
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      Toast.show({
+        type: 'error',
+        text1: 'Invalid Email',
+        text2: 'Please enter a valid email address.',
+      });
+      return;
+    }
+
+    if (!validatePassword(password)) {
+      Toast.show({
+        type: 'error',
+        text1: 'Weak Password',
+        text2: 'Password must be at least 8 characters long and contain both letters and numbers.',
+      });
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+      Toast.show({
+        type: 'error',
+        text1: 'Passwords Password Mismatch',
+        text2: 'Passwords do not match.',
+      });
       return;
     }
 
     if (!agreedToTerms) {
-      Alert.alert('Error', 'Please agree to the terms');
+      Toast.show({
+        type: 'error',
+        text1: 'Terms & Conditions',
+        text2: 'Please agree to the terms to continue.',
+      });
       return;
     }
 
     try {
-      console.log('DEBUG: Starting signup process...');
       setLoading(true);
-      console.log('DEBUG: Calling signup API...');
-      const result = await signup(email, password, fullName, phoneNumber || undefined);
-      console.log('DEBUG: Signup API returned:', result);
-      console.log('DEBUG: About to show success alert');
-      if (Platform.OS === 'web') {
-        window.alert('Account created successfully! Please check your email to verify your account.');
-        console.log('DEBUG: Web alert dismissed, navigating...');
+      const result = await signup(email, password, fullName, phoneNumber);
+      
+      Toast.show({
+        type: 'success',
+        text1: 'Account Created!',
+        text2: 'Please check your email to verify your account.',
+      });
+
+      // Brief delay to allow the user to see the success toast before unmounting the screen
+      setTimeout(() => {
         router.push('/auth/verify-email');
-      } else {
-        Alert.alert(
-          'Success', 
-          'Account created successfully! Please check your email to verify your account.',
-          [
-            { 
-              text: 'OK', 
-              onPress: () => {
-                console.log('DEBUG: OK pressed, navigating...');
-                router.push('/auth/verify-email');
-              }
-            }
-          ]
-        );
-      }
-      console.log('DEBUG: Alert handled');
+      }, 1500);
+
     } catch (error: any) {
       console.error('Signup error:', error);
-      Alert.alert('Error', error.message || 'Failed to create account. Please try again.');
+      Toast.show({
+        type: 'error',
+        text1: 'Signup Failed',
+        text2: error.message || 'Failed to create account. Please try again.',
+      });
     } finally {
       setLoading(false);
     }
@@ -229,6 +262,26 @@ export default function SignupScreen() {
                   onBlur={() => setFocusedInput(null)}
                   keyboardType="email-address"
                   autoCapitalize="none"
+                />
+              </View>
+
+              {/* Phone Number */}
+              <View style={[styles.inputGroup, { marginTop: 24 }]}>
+                <Text style={[styles.label, { color: focusedInput === 'phone' ? theme.tint : theme.textSecondary }]}>
+                  Phone Number
+                </Text>
+                <TextInput
+                  style={[
+                    styles.modernInput,
+                    { color: theme.text, borderBottomColor: focusedInput === 'phone' ? theme.tint : theme.border }
+                  ]}
+                  placeholder="+250 123 456 789"
+                  placeholderTextColor={isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'}
+                  value={phoneNumber}
+                  onChangeText={setPhoneNumber}
+                  onFocus={() => setFocusedInput('phone')}
+                  onBlur={() => setFocusedInput(null)}
+                  keyboardType="phone-pad"
                 />
               </View>
 
