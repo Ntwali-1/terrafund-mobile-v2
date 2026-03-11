@@ -134,7 +134,7 @@ export default function SignupScreen() {
 
       // Brief delay to allow the user to see the success toast before unmounting the screen
       setTimeout(() => {
-        router.push('/auth/verify-email');
+        router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`);
       }, 1500);
 
     } catch (error: any) {

@@ -1,7 +1,9 @@
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState, useRef, useEffect } from 'react';
-import { Alert, StyleSheet, Text, TouchableOpacity, View, Dimensions, ScrollView, TextInput } from 'react-native';
+import { Alert, StyleSheet, Text, TouchableOpacity, View, Dimensions, ScrollView, TextInput, Platform } from 'react-native';
+import Toast from 'react-native-toast-message';
+import { apiClient } from '@/src/utils/api';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { StatusBar } from 'expo-status-bar';
@@ -10,12 +12,14 @@ const { height } = Dimensions.get('window');
 
 export default function VerifyEmailScreen() {
   const router = useRouter();
+  const { email } = useLocalSearchParams<{ email: string }>();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
 
   const [otp, setOtp] = useState(['', '', '', '']);
   const inputRefs = useRef<Array<TextInput | null>>([]);
   const [resending, setResending] = useState(false);
+  const [verifying, setVerifying] = useState(false);
   const [timer, setTimer] = useState(60);
 
   useEffect(() => {
@@ -39,7 +43,7 @@ export default function VerifyEmailScreen() {
     }
     // Submit if all filled
     if (value && index === 3 && newOtp.every(v => v !== '')) {
-      handleVerify();
+      handleVerify(newOtp);
     }
   };
 
@@ -50,23 +54,68 @@ export default function VerifyEmailScreen() {
   };
 
   const handleResendEmail = async () => {
+    if (!email) {
+      Toast.show({
+        type: 'error',
+        text1: 'Email not found',
+        text2: 'Could not find your email address to resend OTP.',
+      });
+      return;
+    }
+    
     setResending(true);
-    setTimeout(() => {
-      setResending(false);
+    try {
+      await apiClient.resendVerificationEmail(email);
       setTimer(60);
-      Alert.alert('Success', 'New OTP sent successfully');
-    }, 1500);
+      Toast.show({
+        type: 'success',
+        text1: 'OTP Sent',
+        text2: 'A new verification code has been sent to your email.',
+      });
+    } catch (error: any) {
+      Toast.show({
+        type: 'error',
+        text1: 'Resend Failed',
+        text2: error.message || 'Failed to resend the verification code. Please try again later.',
+      });
+    } finally {
+      setResending(false);
+    }
   };
 
-  const handleVerify = () => {
-    const code = otp.join('');
+  const handleVerify = async (currentOtpArray?: string[] | any) => {
+    const codeArray = Array.isArray(currentOtpArray) ? currentOtpArray : otp;
+    const code = codeArray.join('');
     if (code.length === 4) {
-      // In real app, call API
-      Alert.alert('Success', 'Email verified successfully!', [
-        { text: 'Continue', onPress: () => router.push('/auth/complete-profile') }
-      ]);
+      setVerifying(true);
+      try {
+        await apiClient.verifyEmail(code);
+        Toast.show({
+          type: 'success',
+          text1: 'Email Verified',
+          text2: 'Your email has been verified successfully!',
+        });
+        
+        setTimeout(() => {
+          router.replace('/auth/login');
+        }, 1500);
+      } catch (error: any) {
+        setOtp(['', '', '', '']);
+        inputRefs.current[0]?.focus();
+        Toast.show({
+          type: 'error',
+          text1: 'Verification Failed',
+          text2: error.message || 'The code you entered is invalid or expired. Please try again.',
+        });
+      } finally {
+        setVerifying(false);
+      }
     } else {
-      Alert.alert('Error', 'Please enter all 4 digits');
+      Toast.show({
+        type: 'error',
+        text1: 'Incomplete Code',
+        text2: 'Please enter all 4 digits of the OTP.',
+      });
     }
   };
 
@@ -108,7 +157,7 @@ export default function VerifyEmailScreen() {
           <Text style={[styles.description, { color: isDark ? '#a0a0a0' : '#4a4a4a' }]}>
             We've sent a 4-digit verification code to
           </Text>
-          <Text style={[styles.emailText, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>user@terrafund.com</Text>
+          <Text style={[styles.emailText, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>{email || 'your email address'}</Text>
         </View>
 
         {/* OTP Input Section */}
@@ -137,12 +186,12 @@ export default function VerifyEmailScreen() {
 
         <View style={styles.actionsSection}>
           <TouchableOpacity
-            style={[styles.continueButton, { backgroundColor: '#11d421', opacity: otp.every(v => v !== '') ? 1 : 0.6 }]}
+            style={[styles.continueButton, { backgroundColor: '#11d421', opacity: (otp.every(v => v !== '') && !verifying) ? 1 : 0.6 }]}
             onPress={handleVerify}
-            disabled={!otp.every(v => v !== '')}
+            disabled={!otp.every(v => v !== '') || verifying}
           >
-            <Text style={styles.continueButtonText}>Verify & Continue</Text>
-            <MaterialIcons name="arrow-forward" size={20} color="white" />
+            <Text style={styles.continueButtonText}>{verifying ? 'VERIFYING...' : 'Verify & Continue'}</Text>
+            {!verifying && <MaterialIcons name="arrow-forward" size={20} color="white" />}
           </TouchableOpacity>
 
           <View style={styles.resendContainer}>
