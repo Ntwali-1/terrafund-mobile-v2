@@ -2,8 +2,11 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Dimensions, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Dimensions, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAuth } from '@/src/utils/auth';
+import { apiClient, LandSummaryResponse } from '@/src/utils/api';
 
 const { width, height } = Dimensions.get('window');
 
@@ -11,6 +14,35 @@ export default function LandownerDashboard() {
   const router = useRouter();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const { user } = useAuth();
+  
+  const [lands, setLands] = useState<LandSummaryResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalArea: 0,
+    investors: 4, // Still dummy for now
+    projects: 3,  // Still dummy for now
+    earnings: 2450 // Still dummy for now
+  });
+
+  useEffect(() => {
+    fetchMyLands();
+  }, []);
+
+  const fetchMyLands = async () => {
+    try {
+      setLoading(true);
+      const response = await apiClient.getMyLands();
+      setLands(response.content);
+      
+      const totalArea = response.content.reduce((sum: number, land: LandSummaryResponse) => sum + land.areaSqMeters, 0);
+      setStats(prev => ({ ...prev, totalArea: totalArea }));
+    } catch (error) {
+      console.error('Error fetching lands:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: isDark ? '#0a0a0a' : '#fcfcfc' }]} edges={['top']}>
@@ -25,7 +57,7 @@ export default function LandownerDashboard() {
           <View style={styles.userSection}>
             <View style={[styles.avatarContainer, { backgroundColor: '#11d421' }]}>
               <Image
-                source={{ uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuBtW9Y7Cne6f0kprwzqDmBBbednODDmVF84_MC1xNyU5xwNHwk2QugWQ7_FThsLE2xGiYQygc7RubMz07gX5E39hzEVwAbS8vCraEdbvLFr40XYtUT8DiuNW8jZGKSMCQR2lE7aYk7nOyZpDnvaXx0hQ-v8S082pfEhhCRe_lttFUmE8eaRbUq7RUim0aAS9Nkz87hmZlJgFKfLw9CoAzeOb29A5-JjYusMeLIyOA05YJNGDwNw3VkWPvbYWLN9tVvfk3jINrgUJSPO" }}
+                source={{ uri: user?.profilePictureUrl || "https://ui-avatars.com/api/?name=" + encodeURIComponent(user?.fullName || 'User') + "&background=11d421&color=fff" }}
                 style={styles.avatar}
               />
             </View>
@@ -34,7 +66,7 @@ export default function LandownerDashboard() {
                 Welcome back,
               </Text>
               <Text style={[styles.userName, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>
-                Kofi Mensah
+                {user?.fullName || 'Landowner'}
               </Text>
             </View>
           </View>
@@ -59,7 +91,9 @@ export default function LandownerDashboard() {
                   <MaterialIcons name="terrain" size={24} color="#11d421" />
                 </View>
                 <Text style={[styles.statLabel, { color: isDark ? '#9ca3af' : '#6b7280' }]}>TOTAL LAND</Text>
-                <Text style={[styles.statValue, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>12.5 Ha</Text>
+                <Text style={[styles.statValue, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>
+                  {stats.totalArea >= 10000 ? (stats.totalArea / 10000).toFixed(1) + ' Ha' : stats.totalArea + ' m²'}
+                </Text>
               </View>
 
               <View style={[styles.statCard, { backgroundColor: isDark ? '#1a1a1a' : '#ffffff' }]}>
@@ -67,7 +101,7 @@ export default function LandownerDashboard() {
                   <MaterialIcons name="groups" size={24} color="#3b82f6" />
                 </View>
                 <Text style={[styles.statLabel, { color: isDark ? '#9ca3af' : '#6b7280' }]}>INVESTORS</Text>
-                <Text style={[styles.statValue, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>4 Active</Text>
+                <Text style={[styles.statValue, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>{stats.investors} Active</Text>
               </View>
             </View>
 
@@ -77,7 +111,7 @@ export default function LandownerDashboard() {
                   <MaterialIcons name="agriculture" size={24} color="#f59e0b" />
                 </View>
                 <Text style={[styles.statLabel, { color: isDark ? '#9ca3af' : '#6b7280' }]}>PROJECTS</Text>
-                <Text style={[styles.statValue, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>3 Ongoing</Text>
+                <Text style={[stats.statValue, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>{stats.projects} Ongoing</Text>
               </View>
 
               <View style={[styles.statCard, { backgroundColor: isDark ? '#1a1a1a' : '#ffffff' }]}>
@@ -85,7 +119,7 @@ export default function LandownerDashboard() {
                   <MaterialIcons name="payments" size={24} color="#11d421" />
                 </View>
                 <Text style={[styles.statLabel, { color: isDark ? '#9ca3af' : '#6b7280' }]}>EARNINGS</Text>
-                <Text style={[styles.statValue, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>$2,450</Text>
+                <Text style={[styles.statValue, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>${stats.earnings.toLocaleString()}</Text>
               </View>
             </View>
           </View>
@@ -126,65 +160,67 @@ export default function LandownerDashboard() {
             </View>
           </View>
 
-          {/* Active Projects */}
+          {/* Registered Lands Section */}
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>
-              Managed Projects
+              My Registered Lands
             </Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={fetchMyLands}>
               <Text style={styles.sectionLink}>Refresh</Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.section}>
-            <TouchableOpacity
-              activeOpacity={0.9}
-              style={[styles.projectCard, {
-                backgroundColor: isDark ? '#1a1a1a' : '#ffffff',
-                borderColor: isDark ? '#333333' : '#eeeeee'
-              }]}
-            >
-              <Image
-                source={{ uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuBG6pkj0nf3Yb5m7ydxIIPrNmg4wqjDqJ8Dy5MdcM4RB_4GB5_6ORxlAfMBb9ltlf7f6Tb6xmRjvdsF13fmIYLuG7ONbtVKnATf9H4n8XzxjEMMgVn_cg8AXJFRwcFlnj4H4qr4kLQrFlYsQauSfYOMi_1qI0tNAY3h3aB8sWGm5VnBOwDazXsAJLHiWq7ur6F2OJ5tE9Iq5-XPBCxK0ctCU3z5rNkYgczrcpvTxxobfDLr7JpnsBndo5lE2uY5H0jZJghkbSrlqFd6" }}
-                style={styles.projectImage}
-              />
-              <View style={styles.projectInfo}>
-                <View style={styles.projectHeader}>
-                  <Text style={[styles.projectTitle, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>
-                    Maize Plantation #42
-                  </Text>
-                  <View style={[styles.statusBadge, { backgroundColor: '#f0fdf4' }]}>
-                    <Text style={[styles.statusText, { color: '#11d421' }]}>HEALTHY</Text>
-                  </View>
-                </View>
-                <Text style={[styles.projectLocation, { color: isDark ? '#9ca3af' : '#6b7280' }]}>
-                  Kumasi, Ashanti Region • 5.2 Ha
-                </Text>
-                <View style={styles.projectStats}>
-                  <View style={styles.projectStat}>
-                    <MaterialIcons name="people" size={16} color="#11d421" />
-                    <Text style={[styles.projectStatText, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>
-                      2 Investors
-                    </Text>
-                  </View>
-                  <View style={styles.projectStat}>
-                    <MaterialIcons name="schedule" size={16} color="#f59e0b" />
-                    <Text style={[styles.projectStatText, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>
-                      45 days left
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.progressContainer}>
-                  <View style={styles.progressHeader}>
-                    <Text style={[styles.progressLabel, { color: isDark ? '#9ca3af' : '#6b7280' }]}>Growth Cycle</Text>
-                    <Text style={[styles.progressValue, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>65%</Text>
-                  </View>
-                  <View style={styles.progressBar}>
-                    <View style={[styles.progressFill, { backgroundColor: '#11d421', width: '65%' }]} />
-                  </View>
-                </View>
+            {loading ? (
+              <ActivityIndicator size="large" color="#11d421" style={{ marginVertical: 20 }} />
+            ) : lands.length === 0 ? (
+              <View style={[styles.emptyState, { backgroundColor: isDark ? '#1a1a1a' : '#f8fafc' }]}>
+                <MaterialIcons name="landscape" size={48} color={isDark ? '#333' : '#ddd'} />
+                <Text style={[styles.emptyStateText, { color: isDark ? '#888' : '#999' }]}>No lands registered yet</Text>
               </View>
-            </TouchableOpacity>
+            ) : (
+              lands.map((land) => (
+                <TouchableOpacity
+                  key={land.id}
+                  activeOpacity={0.9}
+                  style={[styles.projectCard, {
+                    backgroundColor: isDark ? '#1a1a1a' : '#ffffff',
+                    borderColor: isDark ? '#333333' : '#eeeeee',
+                    marginBottom: 16
+                  }]}
+                >
+                  <Image
+                    source={{ uri: land.thumbnailUrl || "https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1000&auto=format&fit=crop" }}
+                    style={styles.projectImage}
+                  />
+                  <View style={styles.projectInfo}>
+                    <View style={styles.projectHeader}>
+                      <Text style={[styles.projectTitle, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>
+                        {land.sector}, {land.district}
+                      </Text>
+                      <View style={[styles.statusBadge, { 
+                        backgroundColor: land.status === 'AVAILABLE' ? '#f0fdf4' : '#fff7ed' 
+                      }]}>
+                        <Text style={[styles.statusText, { 
+                          color: land.status === 'AVAILABLE' ? '#11d421' : '#ea580c' 
+                        }]}>{land.status}</Text>
+                      </View>
+                    </View>
+                    <Text style={[styles.projectLocation, { color: isDark ? '#9ca3af' : '#6b7280' }]}>
+                      {land.province} Province • {land.areaSqMeters >= 10000 ? (land.areaSqMeters / 10000).toFixed(1) + ' Ha' : land.areaSqMeters + ' m²'}
+                    </Text>
+                    <View style={styles.projectStats}>
+                      <View style={styles.projectStat}>
+                        <MaterialIcons name="sell" size={16} color="#11d421" />
+                        <Text style={[styles.projectStatText, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>
+                          {land.availabilityType}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))
+            )}
           </View>
 
           {/* Recent Activity */}
@@ -496,6 +532,17 @@ const styles = StyleSheet.create({
   },
   activityTime: {
     fontSize: 11,
+    fontFamily: 'Poppins_500Medium',
+  },
+  emptyState: {
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 24,
+    gap: 12,
+  },
+  emptyStateText: {
+    fontSize: 14,
     fontFamily: 'Poppins_500Medium',
   },
 });

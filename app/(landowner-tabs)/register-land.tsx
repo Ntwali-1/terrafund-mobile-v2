@@ -6,7 +6,7 @@ import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useRef, useState } from 'react';
 import {
-    Alert,
+    ActivityIndicator,
     Animated,
     Dimensions,
     KeyboardAvoidingView,
@@ -17,14 +17,28 @@ import {
     TextInput,
     TouchableOpacity,
     View,
+    Image,
+    Alert,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
+import { apiClient, AvailabilityType, CreateLandRequest } from '@/src/utils/api';
+import Toast from 'react-native-toast-message';
 
 const { width } = Dimensions.get('window');
-type AvailabilityType = 'LEASE' | 'SALE' | 'BOTH';
+
+interface FileItem {
+  uri: string;
+  name: string;
+  type: string;
+  isUploaded: boolean;
+  onlineUrl?: string;
+}
 
 export default function RegisterLandScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
   const theme = isDark ? Colors.dark : Colors.light;
@@ -38,87 +52,105 @@ export default function RegisterLandScreen() {
   const [areaSqMeters, setAreaSqMeters] = useState('');
   const [availabilityType, setAvailabilityType] = useState<AvailabilityType | null>(null);
 
-  // Step 2: Images
-  const [imageUrls, setImageUrls] = useState<string[]>(['']);
-
-  // Step 3: Documents
-  const [documentUrls, setDocumentUrls] = useState<string[]>(['']);
+  // Step 2 & 3: Files
+  const [images, setImages] = useState<FileItem[]>([]);
+  const [documents, setDocuments] = useState<FileItem[]>([]);
 
   const [currentStep, setCurrentStep] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [focusedInput, setFocusedInput] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const steps = ['Land Details', 'Images', 'Documents'];
+  const steps = ['Details', 'Images', 'Docs'];
 
   const validateStep1 = () => {
-    if (!province || province.length < 2 || province.length > 50) {
-      Alert.alert('Validation Error', 'Province must be between 2 and 50 characters');
-      return false;
-    }
-    if (!district || district.length < 2 || district.length > 50) {
-      Alert.alert('Validation Error', 'District must be between 2 and 50 characters');
-      return false;
-    }
-    if (!sector || sector.length < 2 || sector.length > 50) {
-      Alert.alert('Validation Error', 'Sector must be between 2 and 50 characters');
-      return false;
-    }
+    if (!province.trim()) { Toast.show({ type: 'error', text1: 'Required', text2: 'Please enter province' }); return false; }
+    if (!district.trim()) { Toast.show({ type: 'error', text1: 'Required', text2: 'Please enter district' }); return false; }
+    if (!sector.trim()) { Toast.show({ type: 'error', text1: 'Required', text2: 'Please enter sector' }); return false; }
     const area = parseFloat(areaSqMeters);
-    if (!areaSqMeters || isNaN(area) || area < 100 || area > 10000000) {
-      Alert.alert('Validation Error', 'Area must be between 100 and 10,000,000 square meters');
+    if (!areaSqMeters || isNaN(area) || area <= 0) {
+      Toast.show({ type: 'error', text1: 'Invalid Area', text2: 'Please enter a valid area in sq meters' });
       return false;
     }
     if (!availabilityType) {
-      Alert.alert('Validation Error', 'Please select an availability type');
+      Toast.show({ type: 'error', text1: 'Required', text2: 'Please select availability type' });
       return false;
     }
     return true;
   };
 
-  const validateStep2 = () => {
-    const validUrls = imageUrls.filter(url => url.trim() !== '');
-    if (validUrls.length === 0) {
-      Alert.alert('Validation Error', 'At least one image URL is required');
-      return false;
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Denied', 'We need camera roll permissions to upload images.');
+      return;
     }
-    if (validUrls.length > 10) {
-      Alert.alert('Validation Error', 'Cannot upload more than 10 images');
-      return false;
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsMultipleSelection: true,
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      const newImages: FileItem[] = result.assets.map(asset => ({
+        uri: asset.uri,
+        name: asset.fileName || `img_${Date.now()}.jpg`,
+        type: asset.mimeType || 'image/jpeg',
+        isUploaded: false,
+      }));
+      setImages([...images, ...newImages].slice(0, 10));
     }
-    // Basic URL validation
-    const urlPattern = /^https?:\/\/.+/;
-    for (const url of validUrls) {
-      if (!urlPattern.test(url)) {
-        Alert.alert('Validation Error', `Invalid URL format: ${url}`);
-        return false;
-      }
-    }
-    return true;
   };
 
-  const validateStep3 = () => {
-    const validUrls = documentUrls.filter(url => url.trim() !== '');
-    if (validUrls.length === 0) {
-      Alert.alert('Validation Error', 'At least one document URL is required');
-      return false;
+  const pickDocument = async () => {
+    const result = await DocumentPicker.getDocumentAsync({
+      type: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+      multiple: true,
+    });
+
+    if (!result.canceled) {
+      const newDocs: FileItem[] = result.assets.map(asset => ({
+        uri: asset.uri,
+        name: asset.name,
+        type: asset.mimeType || 'application/octet-stream',
+        isUploaded: false,
+      }));
+      setDocuments([...documents, ...newDocs].slice(0, 5));
     }
-    if (validUrls.length > 5) {
-      Alert.alert('Validation Error', 'Cannot upload more than 5 documents');
-      return false;
-    }
-    const urlPattern = /^https?:\/\/.+/;
-    for (const url of validUrls) {
-      if (!urlPattern.test(url)) {
-        Alert.alert('Validation Error', `Invalid URL format: ${url}`);
-        return false;
+  };
+
+  const uploadFiles = async (items: FileItem[], type: 'image' | 'doc') => {
+    const uploadedItems = [...items];
+    let success = true;
+
+    for (let i = 0; i < uploadedItems.length; i++) {
+      if (!uploadedItems[i].isUploaded) {
+        try {
+          const response = await apiClient.uploadFile(
+            uploadedItems[i].uri, 
+            type === 'image' ? 'land_images' : 'land_docs',
+            uploadedItems[i].name,
+            uploadedItems[i].type
+          );
+          uploadedItems[i] = {
+            ...uploadedItems[i],
+            isUploaded: true,
+            onlineUrl: response.url
+          };
+        } catch (error) {
+          console.error(`Upload failed for ${uploadedItems[i].name}:`, error);
+          success = false;
+        }
       }
     }
-    return true;
+    
+    if (type === 'image') setImages(uploadedItems);
+    else setDocuments(uploadedItems);
+    
+    return success;
   };
 
   const goToNextStep = () => {
     if (currentStep === 0 && !validateStep1()) return;
-    if (currentStep === 1 && !validateStep2()) return;
     
     if (currentStep < 2) {
       const nextStep = currentStep + 1;
@@ -136,62 +168,65 @@ export default function RegisterLandScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!validateStep3()) return;
-
-    setLoading(true);
-    
-    const landData = {
-      province,
-      district,
-      sector,
-      areaSqMeters: parseFloat(areaSqMeters),
-      availabilityType,
-      imageUrls: imageUrls.filter(url => url.trim() !== ''),
-      documentUrls: documentUrls.filter(url => url.trim() !== ''),
-    };
-
-    console.log('Submitting land data:', landData);
-    
-    setTimeout(() => {
-      setLoading(false);
-      Alert.alert(
-        'Success',
-        'Your land has been registered successfully!',
-        [{ text: 'OK', onPress: () => router.back() }]
-      );
-    }, 1500);
-  };
-
-  const addImageUrl = () => {
-    if (imageUrls.length < 10) {
-      setImageUrls([...imageUrls, '']);
+    if (images.length === 0) {
+      Toast.show({ type: 'error', text1: 'Images Required', text2: 'Please add at least one image' });
+      return;
     }
-  };
 
-  const removeImageUrl = (index: number) => {
-    setImageUrls(imageUrls.filter((_, i) => i !== index));
-  };
+    try {
+      setSubmitting(true);
+      
+      // 1. Upload images if not uploaded
+      const imagesSuccess = await uploadFiles(images, 'image');
+      if (!imagesSuccess) {
+        Toast.show({ type: 'error', text1: 'Upload Failed', text2: 'Some images failed to upload. Try again.' });
+        setSubmitting(false);
+        return;
+      }
 
-  const updateImageUrl = (index: number, value: string) => {
-    const newUrls = [...imageUrls];
-    newUrls[index] = value;
-    setImageUrls(newUrls);
-  };
+      // 2. Upload documents if not uploaded
+      if (documents.length > 0) {
+          const docsSuccess = await uploadFiles(documents, 'doc');
+          if (!docsSuccess) {
+            Toast.show({ type: 'error', text1: 'Upload Failed', text2: 'Some documents failed to upload. Try again.' });
+            setSubmitting(false);
+            return;
+          }
+      }
 
-  const addDocumentUrl = () => {
-    if (documentUrls.length < 5) {
-      setDocumentUrls([...documentUrls, '']);
+      // 3. Prepare data
+      const landData: CreateLandRequest = {
+        province,
+        district,
+        sector,
+        areaSqMeters: parseFloat(areaSqMeters),
+        availabilityType: availabilityType!,
+        imageUrls: images.map(img => img.onlineUrl!).filter(url => !!url),
+        documentUrls: documents.map(doc => doc.onlineUrl!).filter(url => !!url),
+      };
+
+      // 4. Submit to Land Service
+      await apiClient.createLand(landData);
+
+      Toast.show({
+        type: 'success',
+        text1: 'Land Registered!',
+        text2: 'Your land has been submitted for verification.',
+      });
+
+      setTimeout(() => {
+        router.back();
+      }, 2000);
+
+    } catch (error: any) {
+      Toast.show({
+        type: 'error',
+        text1: 'Registration Failed',
+        text2: error.message || 'Something went wrong',
+      });
+    } finally {
+      setSubmitting(false);
     }
-  };
-
-  const removeDocumentUrl = (index: number) => {
-    setDocumentUrls(documentUrls.filter((_, i) => i !== index));
-  };
-
-  const updateDocumentUrl = (index: number, value: string) => {
-    const newUrls = [...documentUrls];
-    newUrls[index] = value;
-    setDocumentUrls(newUrls);
   };
 
   return (
@@ -202,15 +237,6 @@ export default function RegisterLandScreen() {
         colors={isDark ? ['#0a0a0a', '#1a1a1a', '#0f1f0f'] : ['#f8fafc', '#ffffff', '#f0fdf4']}
         style={StyleSheet.absoluteFill}
       />
-
-      <View style={styles.decorativeBackground}>
-        <View style={[styles.decorativeCircle, styles.circle1, {
-          backgroundColor: isDark ? 'rgba(17, 212, 33, 0.08)' : 'rgba(17, 212, 33, 0.06)'
-        }]} />
-        <View style={[styles.decorativeCircle, styles.circle2, {
-          backgroundColor: isDark ? 'rgba(17, 212, 33, 0.05)' : 'rgba(17, 212, 33, 0.04)'
-        }]} />
-      </View>
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -223,7 +249,7 @@ export default function RegisterLandScreen() {
           >
             <MaterialIcons name="arrow-back" size={24} color={theme.text} />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: theme.text }]}>Register New Land</Text>
+          <Text style={[styles.headerTitle, { color: theme.text }]}>Register Land</Text>
           <View style={{ width: 44 }} />
         </View>
 
@@ -263,146 +289,79 @@ export default function RegisterLandScreen() {
           pagingEnabled
           scrollEnabled={false}
           showsHorizontalScrollIndicator={false}
-          onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-            { useNativeDriver: false }
-          )}
           scrollEventThrottle={16}
+          style={{ flex: 1 }}
         >
           {/* Step 1: Land Details */}
           <ScrollView
             style={{ width }}
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.stepContent}
+            contentContainerStyle={[styles.stepContent, { paddingBottom: insets.bottom + 180 }]}
             keyboardShouldPersistTaps="handled"
           >
-            <View style={[styles.infoCard, {
-              backgroundColor: isDark ? 'rgba(17, 212, 33, 0.1)' : 'rgba(17, 212, 33, 0.08)',
-              borderColor: isDark ? 'rgba(17, 212, 33, 0.2)' : 'rgba(17, 212, 33, 0.15)'
-            }]}>
-              <MaterialIcons name="info-outline" size={20} color="#11d421" />
-              <Text style={[styles.infoText, { color: isDark ? '#d1d5db' : '#374151' }]}>
-                Provide the location and size details of your land
-              </Text>
-            </View>
-
             <View style={[styles.formCard, {
               backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.9)',
-              borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
             }]}>
               <View style={styles.sectionHeader}>
                 <MaterialIcons name="location-on" size={20} color="#11d421" />
-                <Text style={[styles.sectionTitle, { color: theme.text }]}>Location Details</Text>
+                <Text style={[styles.sectionTitle, { color: theme.text }]}>Location</Text>
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: focusedInput === 'province' ? theme.tint : theme.textSecondary }]}>
-                  Province
-                </Text>
+                <Text style={[styles.label, { color: theme.textSecondary }]}>Province</Text>
                 <TextInput
-                  style={[styles.input, {
-                    color: theme.text,
-                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#ffffff',
-                    borderColor: focusedInput === 'province' ? theme.tint : (isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)')
-                  }]}
+                  style={[styles.input, { color: theme.text, backgroundColor: isDark ? '#1a1a1a' : '#fff' }]}
                   placeholder="e.g., Kigali"
-                  placeholderTextColor={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'}
                   value={province}
                   onChangeText={setProvince}
-                  onFocus={() => setFocusedInput('province')}
-                  onBlur={() => setFocusedInput(null)}
                 />
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: focusedInput === 'district' ? theme.tint : theme.textSecondary }]}>
-                  District
-                </Text>
+                <Text style={[styles.label, { color: theme.textSecondary }]}>District</Text>
                 <TextInput
-                  style={[styles.input, {
-                    color: theme.text,
-                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#ffffff',
-                    borderColor: focusedInput === 'district' ? theme.tint : (isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)')
-                  }]}
+                  style={[styles.input, { color: theme.text, backgroundColor: isDark ? '#1a1a1a' : '#fff' }]}
                   placeholder="e.g., Gasabo"
-                  placeholderTextColor={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'}
                   value={district}
                   onChangeText={setDistrict}
-                  onFocus={() => setFocusedInput('district')}
-                  onBlur={() => setFocusedInput(null)}
                 />
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: focusedInput === 'sector' ? theme.tint : theme.textSecondary }]}>
-                  Sector
-                </Text>
+                <Text style={[styles.label, { color: theme.textSecondary }]}>Sector</Text>
                 <TextInput
-                  style={[styles.input, {
-                    color: theme.text,
-                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#ffffff',
-                    borderColor: focusedInput === 'sector' ? theme.tint : (isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)')
-                  }]}
+                  style={[styles.input, { color: theme.text, backgroundColor: isDark ? '#1a1a1a' : '#fff' }]}
                   placeholder="e.g., Remera"
-                  placeholderTextColor={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'}
                   value={sector}
                   onChangeText={setSector}
-                  onFocus={() => setFocusedInput('sector')}
-                  onBlur={() => setFocusedInput(null)}
                 />
               </View>
 
-              <View style={[styles.sectionHeader, { marginTop: 24 }]}>
-                <MaterialIcons name="terrain" size={20} color="#11d421" />
-                <Text style={[styles.sectionTitle, { color: theme.text }]}>Land Details</Text>
-              </View>
-
               <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: focusedInput === 'area' ? theme.tint : theme.textSecondary }]}>
-                  Area (Square Meters)
-                </Text>
+                <Text style={[styles.label, { color: theme.textSecondary }]}>Area (Sq Meters)</Text>
                 <TextInput
-                  style={[styles.input, {
-                    color: theme.text,
-                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#ffffff',
-                    borderColor: focusedInput === 'area' ? theme.tint : (isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)')
-                  }]}
-                  placeholder="Min: 100, Max: 10,000,000"
-                  placeholderTextColor={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'}
+                  style={[styles.input, { color: theme.text, backgroundColor: isDark ? '#1a1a1a' : '#fff' }]}
+                  placeholder="e.g., 5000"
+                  keyboardType="numeric"
                   value={areaSqMeters}
                   onChangeText={setAreaSqMeters}
-                  onFocus={() => setFocusedInput('area')}
-                  onBlur={() => setFocusedInput(null)}
-                  keyboardType="numeric"
                 />
-                {areaSqMeters && !isNaN(parseFloat(areaSqMeters)) && (
-                  <Text style={[styles.helperText, { color: theme.textSecondary }]}>
-                    ≈ {(parseFloat(areaSqMeters) / 10000).toFixed(2)} hectares
-                  </Text>
-                )}
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: theme.textSecondary }]}>
-                  Availability Type
-                </Text>
+                <Text style={[styles.label, { color: theme.textSecondary }]}>Availability</Text>
                 <View style={styles.availabilityOptions}>
-                  {(['LEASE', 'SALE', 'BOTH'] as AvailabilityType[]).map((type) => (
+                  {(['SALE', 'RENT', 'HARVEST_SHARE', 'ALL'] as AvailabilityType[]).map((type) => (
                     <TouchableOpacity
                       key={type}
                       onPress={() => setAvailabilityType(type)}
                       style={[styles.availabilityOption, {
-                        backgroundColor: availabilityType === type ? '#11d421' : (isDark ? 'rgba(255, 255, 255, 0.05)' : '#ffffff'),
-                        borderColor: availabilityType === type ? '#11d421' : (isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)')
+                        backgroundColor: availabilityType === type ? '#11d421' : (isDark ? '#1a1a1a' : '#fff'),
+                        borderColor: availabilityType === type ? '#11d421' : (isDark ? '#333' : '#ddd')
                       }]}
                     >
-                      <MaterialIcons
-                        name={availabilityType === type ? 'check-circle' : 'radio-button-unchecked'}
-                        size={20}
-                        color={availabilityType === type ? '#ffffff' : theme.textSecondary}
-                      />
-                      <Text style={[styles.availabilityText, { color: availabilityType === type ? '#ffffff' : theme.text }]}>
-                        {type === 'LEASE' ? 'For Lease' : type === 'SALE' ? 'For Sale' : 'Both'}
+                      <Text style={[styles.availabilityText, { color: availabilityType === type ? '#fff' : theme.text }]}>
+                        {type.replace('_', ' ')}
                       </Text>
                     </TouchableOpacity>
                   ))}
@@ -415,72 +374,40 @@ export default function RegisterLandScreen() {
           <ScrollView
             style={{ width }}
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.stepContent}
-            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={[styles.stepContent, { paddingBottom: insets.bottom + 180 }]}
           >
-            <View style={[styles.infoCard, {
-              backgroundColor: isDark ? 'rgba(17, 212, 33, 0.1)' : 'rgba(17, 212, 33, 0.08)',
-              borderColor: isDark ? 'rgba(17, 212, 33, 0.2)' : 'rgba(17, 212, 33, 0.15)'
-            }]}>
-              <MaterialIcons name="info-outline" size={20} color="#11d421" />
-              <Text style={[styles.infoText, { color: isDark ? '#d1d5db' : '#374151' }]}>
-                Add 1-10 image URLs of your land. High-quality images attract more investors.
-              </Text>
-            </View>
-
-            <View style={[styles.formCard, {
-              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.9)',
-              borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
-            }]}>
-              <View style={styles.sectionHeader}>
-                <MaterialIcons name="image" size={20} color="#11d421" />
-                <Text style={[styles.sectionTitle, { color: theme.text }]}>Land Images</Text>
+            <View style={styles.fileSection}>
+              <View style={styles.fileHeader}>
+                <Text style={[styles.sectionTitle, { color: theme.text }]}>Land Images (Max 10)</Text>
+                <TouchableOpacity onPress={pickImage} style={styles.pickButton}>
+                  <MaterialIcons name="add-a-photo" size={24} color="#11d421" />
+                </TouchableOpacity>
               </View>
 
-              {imageUrls.map((url, index) => (
-                <View key={index} style={styles.urlInputGroup}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.label, { color: theme.textSecondary }]}>
-                      Image URL {index + 1}
-                    </Text>
-                    <TextInput
-                      style={[styles.input, {
-                        color: theme.text,
-                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#ffffff',
-                        borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
-                      }]}
-                      placeholder="https://example.com/image.jpg"
-                      placeholderTextColor={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'}
-                      value={url}
-                      onChangeText={(text) => updateImageUrl(index, text)}
-                      autoCapitalize="none"
-                    />
-                  </View>
-                  {imageUrls.length > 1 && (
-                    <TouchableOpacity
-                      onPress={() => removeImageUrl(index)}
-                      style={[styles.removeButton, { backgroundColor: isDark ? '#2a2a2a' : '#fee2e2' }]}
+              <View style={styles.fileGrid}>
+                {images.map((img, idx) => (
+                  <View key={idx} style={styles.imagePreviewContainer}>
+                    <Image source={{ uri: img.uri }} style={styles.imagePreview} />
+                    <TouchableOpacity 
+                      style={styles.removeFileButton} 
+                      onPress={() => setImages(images.filter((_, i) => i !== idx))}
                     >
-                      <MaterialIcons name="close" size={20} color="#ef4444" />
+                      <MaterialIcons name="cancel" size={20} color="#ef4444" />
                     </TouchableOpacity>
-                  )}
-                </View>
-              ))}
-
-              {imageUrls.length < 10 && (
-                <TouchableOpacity
-                  onPress={addImageUrl}
-                  style={[styles.addButton, {
-                    backgroundColor: isDark ? 'rgba(17, 212, 33, 0.1)' : 'rgba(17, 212, 33, 0.08)',
-                    borderColor: '#11d421'
-                  }]}
-                >
-                  <MaterialIcons name="add-circle-outline" size={20} color="#11d421" />
-                  <Text style={[styles.addButtonText, { color: '#11d421' }]}>
-                    Add Another Image
-                  </Text>
-                </TouchableOpacity>
-              )}
+                    {img.isUploaded && (
+                      <View style={styles.uploadBadge}>
+                        <MaterialIcons name="check-circle" size={16} color="#11d421" />
+                      </View>
+                    )}
+                  </View>
+                ))}
+                {images.length === 0 && (
+                     <TouchableOpacity onPress={pickImage} style={[styles.imagePreviewContainer, { borderStyle: 'dashed', borderWidth: 1, borderColor: '#ddd', alignItems: 'center', justifyContent: 'center' }]}>
+                        <MaterialIcons name="add" size={32} color="#ddd" />
+                        <Text style={{ fontSize: 10, color: '#999' }}>Add Image</Text>
+                     </TouchableOpacity>
+                )}
+              </View>
             </View>
           </ScrollView>
 
@@ -488,122 +415,63 @@ export default function RegisterLandScreen() {
           <ScrollView
             style={{ width }}
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.stepContent}
-            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={[styles.stepContent, { paddingBottom: insets.bottom + 180 }]}
           >
-            <View style={[styles.infoCard, {
-              backgroundColor: isDark ? 'rgba(17, 212, 33, 0.1)' : 'rgba(17, 212, 33, 0.08)',
-              borderColor: isDark ? 'rgba(17, 212, 33, 0.2)' : 'rgba(17, 212, 33, 0.15)'
-            }]}>
-              <MaterialIcons name="info-outline" size={20} color="#11d421" />
-              <Text style={[styles.infoText, { color: isDark ? '#d1d5db' : '#374151' }]}>
-                Add 1-5 document URLs (land titles, certificates, etc.) to verify ownership.
-              </Text>
-            </View>
-
-            <View style={[styles.formCard, {
-              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.9)',
-              borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
-            }]}>
-              <View style={styles.sectionHeader}>
-                <MaterialIcons name="description" size={20} color="#11d421" />
-                <Text style={[styles.sectionTitle, { color: theme.text }]}>Land Documents</Text>
+            <View style={styles.fileSection}>
+              <View style={styles.fileHeader}>
+                <Text style={[styles.sectionTitle, { color: theme.text }]}>Documents (Max 5)</Text>
+                <TouchableOpacity onPress={pickDocument} style={styles.pickButton}>
+                  <MaterialIcons name="note-add" size={28} color="#11d421" />
+                </TouchableOpacity>
               </View>
 
-              {documentUrls.map((url, index) => (
-                <View key={index} style={styles.urlInputGroup}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.label, { color: theme.textSecondary }]}>
-                      Document URL {index + 1}
-                    </Text>
-                    <TextInput
-                      style={[styles.input, {
-                        color: theme.text,
-                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#ffffff',
-                        borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
-                      }]}
-                      placeholder="https://example.com/document.pdf"
-                      placeholderTextColor={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'}
-                      value={url}
-                      onChangeText={(text) => updateDocumentUrl(index, text)}
-                      autoCapitalize="none"
-                    />
-                  </View>
-                  {documentUrls.length > 1 && (
-                    <TouchableOpacity
-                      onPress={() => removeDocumentUrl(index)}
-                      style={[styles.removeButton, { backgroundColor: isDark ? '#2a2a2a' : '#fee2e2' }]}
-                    >
-                      <MaterialIcons name="close" size={20} color="#ef4444" />
-                    </TouchableOpacity>
-                  )}
+              {documents.map((doc, idx) => (
+                <View key={idx} style={[styles.docItem, { backgroundColor: isDark ? '#1a1a1a' : '#fff' }]}>
+                  <MaterialIcons name="description" size={24} color="#11d421" />
+                  <Text style={[styles.docName, { color: theme.text }]} numberOfLines={1}>{doc.name}</Text>
+                  <TouchableOpacity onPress={() => setDocuments(documents.filter((_, i) => i !== idx))}>
+                    <MaterialIcons name="delete-outline" size={24} color="#ef4444" />
+                  </TouchableOpacity>
                 </View>
               ))}
 
-              {documentUrls.length < 5 && (
-                <TouchableOpacity
-                  onPress={addDocumentUrl}
-                  style={[styles.addButton, {
-                    backgroundColor: isDark ? 'rgba(17, 212, 33, 0.1)' : 'rgba(17, 212, 33, 0.08)',
-                    borderColor: '#11d421'
-                  }]}
-                >
-                  <MaterialIcons name="add-circle-outline" size={20} color="#11d421" />
-                  <Text style={[styles.addButtonText, { color: '#11d421' }]}>
-                    Add Another Document
-                  </Text>
-                </TouchableOpacity>
+              {documents.length === 0 && (
+                <View style={[styles.emptyDocs, { backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : '#f8fafc' }]}>
+                    <MaterialIcons name="file-upload" size={48} color={isDark ? '#333' : '#ddd'} />
+                    <Text style={{ color: '#999', textAlign: 'center' }}>Upload land titles, certificates, or survey maps (Optional but recommended)</Text>
+                    <TouchableOpacity onPress={pickDocument} style={styles.uploadCta}>
+                        <Text style={{ color: '#11d421', fontFamily: 'Poppins_700Bold' }}>Select Documents</Text>
+                    </TouchableOpacity>
+                </View>
               )}
             </View>
           </ScrollView>
         </ScrollView>
 
         {/* Navigation Buttons */}
-        <View style={[styles.navigationContainer, {
-          backgroundColor: isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-          borderTopColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
-        }]}>
+        <View style={[styles.navigationContainer, { paddingBottom: Math.max(insets.bottom, 24) }]}>
           {currentStep > 0 && (
-            <TouchableOpacity
-              onPress={goToPreviousStep}
-              style={[styles.navButton, styles.backNavButton, {
-                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#ffffff',
-                borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
-              }]}
-            >
+            <TouchableOpacity onPress={goToPreviousStep} style={styles.backNavButton}>
               <MaterialIcons name="arrow-back" size={20} color={theme.text} />
-              <Text style={[styles.navButtonText, { color: theme.text }]}>Back</Text>
+              <Text style={{ color: theme.text }}>Back</Text>
             </TouchableOpacity>
           )}
 
           {currentStep < 2 ? (
-            <TouchableOpacity
-              onPress={goToNextStep}
-              style={[styles.navButton, styles.nextNavButton, { marginLeft: currentStep === 0 ? 'auto' : 0 }]}
-            >
-              <LinearGradient
-                colors={['#11d421', '#0fb31c']}
-                style={styles.navGradient}
-              >
+            <TouchableOpacity onPress={goToNextStep} style={[styles.nextNavButton, { marginLeft: 'auto' }]}>
+              <LinearGradient colors={['#11d421', '#0fb31c']} style={styles.navGradient}>
                 <Text style={styles.nextButtonText}>Next</Text>
                 <MaterialIcons name="arrow-forward" size={20} color="#ffffff" />
               </LinearGradient>
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity
-              onPress={handleSubmit}
-              disabled={loading}
-              style={[styles.navButton, styles.nextNavButton]}
-            >
-              <LinearGradient
-                colors={['#11d421', '#0fb31c']}
-                style={styles.navGradient}
-              >
-                {loading ? (
-                  <Text style={styles.nextButtonText}>SUBMITTING...</Text>
+            <TouchableOpacity onPress={handleSubmit} disabled={submitting} style={[styles.nextNavButton, { marginLeft: 'auto' }]}>
+              <LinearGradient colors={['#11d421', '#0fb31c']} style={styles.navGradient}>
+                {submitting ? (
+                  <ActivityIndicator color="#fff" />
                 ) : (
                   <>
-                    <Text style={styles.nextButtonText}>Submit</Text>
+                    <Text style={styles.nextButtonText}>Submit Land</Text>
                     <MaterialIcons name="check-circle" size={20} color="#ffffff" />
                   </>
                 )}
@@ -617,230 +485,41 @@ export default function RegisterLandScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  decorativeBackground: {
-    ...StyleSheet.absoluteFillObject,
-    overflow: 'hidden',
-    pointerEvents: 'none',
-  },
-  decorativeCircle: {
-    position: 'absolute',
-    borderRadius: 9999,
-  },
-  circle1: {
-    width: 300,
-    height: 300,
-    top: -100,
-    right: -100,
-  },
-  circle2: {
-    width: 250,
-    height: 250,
-    bottom: 50,
-    left: -80,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontFamily: 'SpaceGrotesk_700Bold',
-    letterSpacing: -0.5,
-  },
-  progressContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 24,
-    paddingVertical: 20,
-    alignItems: 'center',
-  },
-  stepContainer: {
-    flex: 1,
-    alignItems: 'center',
-    position: 'relative',
-  },
-  stepCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    marginBottom: 8,
-  },
-  stepNumber: {
-    fontSize: 14,
-    fontFamily: 'Poppins_700Bold',
-  },
-  stepLabel: {
-    fontSize: 11,
-    fontFamily: 'Poppins_600SemiBold',
-    textAlign: 'center',
-  },
-  stepLine: {
-    position: 'absolute',
-    top: 16,
-    left: '50%',
-    right: '-50%',
-    height: 2,
-  },
-  stepContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 120,
-  },
-  infoCard: {
-    flexDirection: 'row',
-    padding: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    gap: 12,
-    marginBottom: 24,
-  },
-  infoText: {
-    flex: 1,
-    fontSize: 14,
-    fontFamily: 'Poppins_500Medium',
-    lineHeight: 20,
-  },
-  formCard: {
-    borderRadius: 24,
-    padding: 24,
-    borderWidth: 1,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontFamily: 'SpaceGrotesk_700Bold',
-    letterSpacing: -0.3,
-  },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 14,
-    fontFamily: 'Poppins_600SemiBold',
-    letterSpacing: 0.3,
-    marginBottom: 8,
-  },
-  input: {
-    fontSize: 16,
-    fontFamily: 'Poppins_500Medium',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 14,
-    borderWidth: 1.5,
-  },
-  helperText: {
-    fontSize: 12,
-    fontFamily: 'Poppins_500Medium',
-    marginTop: 6,
-    marginLeft: 4,
-  },
-  availabilityOptions: {
-    gap: 12,
-  },
-  availabilityOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    gap: 12,
-  },
-  availabilityText: {
-    fontSize: 16,
-    fontFamily: 'Poppins_600SemiBold',
-  },
-  urlInputGroup: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 20,
-    alignItems: 'flex-end',
-  },
-  removeButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 2,
-  },
-  addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 16,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderStyle: 'dashed',
-    gap: 8,
-    marginTop: 8,
-  },
-  addButtonText: {
-    fontSize: 15,
-    fontFamily: 'Poppins_600SemiBold',
-  },
-  navigationContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    padding: 24,
-    gap: 12,
-    borderTopWidth: 1,
-  },
-  navButton: {
-    flex: 1,
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  backNavButton: {
-    borderWidth: 1.5,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 16,
-  },
-  nextNavButton: {
-    shadowColor: '#11d421',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 8,
-  },
-  navGradient: {
-    paddingVertical: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  navButtonText: {
-    fontSize: 16,
-    fontFamily: 'Poppins_700Bold',
-  },
-  nextButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontFamily: 'Poppins_700Bold',
-  },
+  container: { flex: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingVertical: 16 },
+  backButton: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { fontSize: 20, fontFamily: 'SpaceGrotesk_700Bold' },
+  progressContainer: { flexDirection: 'row', paddingHorizontal: 24, paddingVertical: 20, alignItems: 'center' },
+  stepContainer: { flex: 1, alignItems: 'center' },
+  stepCircle: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', borderWidth: 2, marginBottom: 8 },
+  stepNumber: { fontSize: 14, fontFamily: 'Poppins_700Bold' },
+  stepLabel: { fontSize: 11, fontFamily: 'Poppins_600SemiBold' },
+  stepLine: { position: 'absolute', top: 16, left: '50%', right: '-50%', height: 2 },
+  stepContent: { paddingHorizontal: 24 },
+  formCard: { borderRadius: 24, padding: 24, borderWidth: 1, borderColor: 'rgba(0,0,0,0.05)' },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 20 },
+  sectionTitle: { fontSize: 18, fontFamily: 'SpaceGrotesk_700Bold' },
+  inputGroup: { marginBottom: 16 },
+  label: { fontSize: 14, fontFamily: 'Poppins_600SemiBold', marginBottom: 8 },
+  input: { fontSize: 16, fontFamily: 'Poppins_500Medium', padding: 14, borderRadius: 14, borderWidth: 1, borderColor: '#ddd' },
+  availabilityOptions: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  availabilityOption: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, borderWidth: 1 },
+  availabilityText: { fontSize: 12, fontFamily: 'Poppins_600SemiBold' },
+  fileSection: { gap: 20 },
+  fileHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  pickButton: { width: 50, height: 50, borderRadius: 25, backgroundColor: 'rgba(17, 212, 33, 0.1)', alignItems: 'center', justifyContent: 'center' },
+  fileGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  imagePreviewContainer: { width: (width - 72) / 3, aspectRatio: 1, borderRadius: 12, overflow: 'hidden', position: 'relative' },
+  imagePreview: { width: '100%', height: '100%' },
+  removeFileButton: { position: 'absolute', top: 4, right: 4, backgroundColor: 'white', borderRadius: 10 },
+  uploadBadge: { position: 'absolute', bottom: 4, right: 4, backgroundColor: 'white', borderRadius: 10, padding: 2 },
+  docItem: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 16, gap: 12, borderWidth: 1, borderColor: '#eee' },
+  docName: { flex: 1, fontSize: 14, fontFamily: 'Poppins_500Medium' },
+  emptyDocs: { padding: 40, borderRadius: 24, alignItems: 'center', justifyContent: 'center', gap: 12 },
+  uploadCta: { marginTop: 8 },
+  navigationContainer: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', paddingHorizontal: 24, gap: 12, borderTopWidth: 1, borderColor: 'rgba(0,0,0,0.05)', backgroundColor: 'transparent' },
+  backNavButton: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 16 },
+  nextNavButton: { flex: 1, borderRadius: 16, overflow: 'hidden' },
+  navGradient: { paddingVertical: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  nextButtonText: { color: '#ffffff', fontSize: 16, fontFamily: 'Poppins_700Bold' },
 });

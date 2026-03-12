@@ -80,16 +80,18 @@ export default function Index() {
 
   // Handle auto-login routing
   useEffect(() => {
-    if (!isLoading && isAuthenticated && user) {
-      const hasInvestorRole = user.roles?.includes(Role.INVESTOR);
-      const hasLandOwnerRole = user.roles?.includes(Role.LAND_OWNER);
-      
-      if (hasInvestorRole) {
-        router.replace('/(tabs)');
-      } else if (hasLandOwnerRole) {
-        router.replace('/(landowner-tabs)');
-      } else {
-        router.replace('/auth/role-selection');
+    if (!isLoading) {
+      if (isAuthenticated && user) {
+        const hasInvestorRole = user.roles?.includes(Role.INVESTOR);
+        const hasLandOwnerRole = user.roles?.includes(Role.LAND_OWNER);
+        
+        if (hasInvestorRole) {
+          router.replace('/(tabs)');
+        } else if (hasLandOwnerRole) {
+          router.replace('/(landowner-tabs)');
+        } else {
+          router.replace('/auth/role-selection');
+        }
       }
     }
   }, [isLoading, isAuthenticated, user]);

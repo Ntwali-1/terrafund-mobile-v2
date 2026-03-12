@@ -59,6 +59,7 @@ export default function LandownerTabLayout() {
         name="register-land"
         options={{
           href: null, // Hide from tab bar
+          tabBarStyle: { display: 'none' }, // Hide bar when this screen is active
         }}
       />
     </Tabs>

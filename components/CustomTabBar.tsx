@@ -8,6 +8,26 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
     const { colorScheme } = useColorScheme();
     const isDark = colorScheme === 'dark';
 
+    // Step 1: Identify the current active route and its options
+    const currentRoute = state.routes[state.index];
+    const currentOptions = descriptors[currentRoute.key].options;
+    const tabBarStyle = currentOptions.tabBarStyle as any;
+    
+    // Step 2: Hide the tab bar if display: 'none' is set for the current screen
+    if (tabBarStyle?.display === 'none') {
+        return null;
+    }
+
+    // Step 3: Filter routes that should be visible in the tab bar
+    const visibleRoutes = state.routes.filter(route => {
+        const { options } = descriptors[route.key];
+        // We skip screens with href: null (expo-router specific)
+        return (options as any).href !== null;
+    });
+
+    // Step 4: Calculate middle index for the special large button
+    const middleIndex = Math.floor(visibleRoutes.length / 2);
+
     return (
         <View style={[
             styles.tabBar, 
@@ -17,10 +37,9 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
                 bottom: insets.bottom > 0 ? insets.bottom + 10 : 20
             }
         ]}>
-            {state.routes.map((route, index) => {
+            {visibleRoutes.map((route, index) => {
                 const { options } = descriptors[route.key];
-                const isFocused = state.index === index;
-                const isMiddle = index === Math.floor(state.routes.length / 2); // Dynamic middle button
+                const isFocused = state.routes[state.index].key === route.key;
 
                 const onPress = () => {
                     const event = navigation.emit({
@@ -41,6 +60,7 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
                     });
                 };
 
+                const isMiddle = index === middleIndex;
                 const activeColor = options.tabBarActiveTintColor || '#11d421';
                 const inactiveColor = options.tabBarInactiveTintColor || 'gray';
                 const color = isFocused ? activeColor : inactiveColor;
