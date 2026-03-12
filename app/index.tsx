@@ -7,6 +7,8 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useFontLoader } from '@/hooks/use-font-loader';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAuth } from '@/src/utils/auth';
+import { Role } from '@/src/utils/api';
 
 const { height, width } = Dimensions.get('window');
 
@@ -70,9 +72,27 @@ export default function Index() {
   const isDark = colorScheme === 'dark';
   const { fontsLoaded } = useFontLoader();
 
+  const { user, isAuthenticated, isLoading } = useAuth();
+
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
+
+  // Handle auto-login routing
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && user) {
+      const hasInvestorRole = user.roles?.includes(Role.INVESTOR);
+      const hasLandOwnerRole = user.roles?.includes(Role.LAND_OWNER);
+      
+      if (hasInvestorRole) {
+        router.replace('/(tabs)');
+      } else if (hasLandOwnerRole) {
+        router.replace('/(landowner-tabs)');
+      } else {
+        router.replace('/auth/role-selection');
+      }
+    }
+  }, [isLoading, isAuthenticated, user]);
 
   useEffect(() => {
     if (fontsLoaded) {
@@ -91,7 +111,7 @@ export default function Index() {
     }
   }, [fontsLoaded]);
 
-  if (!fontsLoaded) {
+  if (!fontsLoaded || isLoading) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: isDark ? '#0a0a0a' : '#ffffff' }]}>
         <ActivityIndicator size="large" color="#11d421" />
