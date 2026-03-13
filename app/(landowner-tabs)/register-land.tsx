@@ -120,7 +120,7 @@ export default function RegisterLandScreen() {
 
   const uploadFiles = async (items: FileItem[], type: 'image' | 'doc') => {
     const uploadedItems = [...items];
-    let success = true;
+    let allSuccess = true;
 
     for (let i = 0; i < uploadedItems.length; i++) {
       if (!uploadedItems[i].isUploaded) {
@@ -138,7 +138,7 @@ export default function RegisterLandScreen() {
           };
         } catch (error) {
           console.error(`Upload failed for ${uploadedItems[i].name}:`, error);
-          success = false;
+          allSuccess = false;
         }
       }
     }
@@ -146,7 +146,7 @@ export default function RegisterLandScreen() {
     if (type === 'image') setImages(uploadedItems);
     else setDocuments(uploadedItems);
     
-    return success;
+    return { success: allSuccess, items: uploadedItems };
   };
 
   const goToNextStep = () => {
@@ -177,7 +177,7 @@ export default function RegisterLandScreen() {
       setSubmitting(true);
       
       // 1. Upload images if not uploaded
-      const imagesSuccess = await uploadFiles(images, 'image');
+      const { success: imagesSuccess, items: finalImages } = await uploadFiles(images, 'image');
       if (!imagesSuccess) {
         Toast.show({ type: 'error', text1: 'Upload Failed', text2: 'Some images failed to upload. Try again.' });
         setSubmitting(false);
@@ -185,13 +185,15 @@ export default function RegisterLandScreen() {
       }
 
       // 2. Upload documents if not uploaded
+      let finalDocuments = documents;
       if (documents.length > 0) {
-          const docsSuccess = await uploadFiles(documents, 'doc');
+          const { success: docsSuccess, items: updatedDocs } = await uploadFiles(documents, 'doc');
           if (!docsSuccess) {
             Toast.show({ type: 'error', text1: 'Upload Failed', text2: 'Some documents failed to upload. Try again.' });
             setSubmitting(false);
             return;
           }
+          finalDocuments = updatedDocs;
       }
 
       // 3. Prepare data
@@ -201,8 +203,8 @@ export default function RegisterLandScreen() {
         sector,
         areaSqMeters: parseFloat(areaSqMeters),
         availabilityType: availabilityType!,
-        imageUrls: images.map(img => img.onlineUrl!).filter(url => !!url),
-        documentUrls: documents.map(doc => doc.onlineUrl!).filter(url => !!url),
+        imageUrls: finalImages.map(img => img.onlineUrl!).filter(url => !!url),
+        documentUrls: finalDocuments.map(doc => doc.onlineUrl!).filter(url => !!url),
       };
 
       // 4. Submit to Land Service
