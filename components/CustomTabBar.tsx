@@ -20,13 +20,12 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
 
     // Step 3: Filter routes that should be visible in the tab bar
     const visibleRoutes = state.routes.filter(route => {
-        const { options } = descriptors[route.key];
-        // We skip screens with href: null (expo-router specific)
-        return (options as any).href !== null;
+        const options = descriptors[route.key].options as any;
+        return options.href !== null;
     });
 
-    // Step 4: Calculate middle index for the special large button
-    const middleIndex = Math.floor(visibleRoutes.length / 2);
+    // We'll specifically target 'register-land' as the middle large button
+    const middleRouteName = 'register-land';
 
     return (
         <View style={[
@@ -60,7 +59,6 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
                     });
                 };
 
-                const isMiddle = index === middleIndex;
                 const activeColor = options.tabBarActiveTintColor || '#11d421';
                 const inactiveColor = options.tabBarInactiveTintColor || 'gray';
                 const color = isFocused ? activeColor : inactiveColor;
@@ -76,20 +74,14 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
                         style={styles.tabItem}
                         activeOpacity={0.8}
                     >
-                        {isMiddle ? (
-                            <View style={[styles.middleButton, { backgroundColor: activeColor }]}>
-                                {options.tabBarIcon?.({ focused: isFocused, color: '#ffffff', size: 30 })}
+                        <View style={[styles.iconContainer, isFocused && { backgroundColor: isDark ? 'rgba(17, 212, 33, 0.15)' : 'rgba(17, 212, 33, 0.1)' }]}>
+                            <View style={styles.iconWrapper}>
+                                {options.tabBarIcon?.({ focused: isFocused, color: color, size: 22 })}
                             </View>
-                        ) : (
-                            <View style={[styles.iconContainer, isFocused && { backgroundColor: isDark ? 'rgba(17, 212, 33, 0.15)' : 'rgba(17, 212, 33, 0.1)' }]}>
-                                <View style={styles.iconWrapper}>
-                                    {options.tabBarIcon?.({ focused: isFocused, color: color, size: 24 })}
-                                </View>
-                                {isFocused && (
-                                    <View style={[styles.activeIndicator, { backgroundColor: activeColor }]} />
-                                )}
-                            </View>
-                        )}
+                            {isFocused && (
+                                <View style={[styles.activeIndicator, { backgroundColor: activeColor }]} />
+                            )}
+                        </View>
                     </TouchableOpacity>
                 );
             })}
@@ -147,14 +139,16 @@ const styles = StyleSheet.create({
         borderRadius: 32,
         alignItems: 'center',
         justifyContent: 'center',
+        borderWidth: 4,
+        borderColor: 'rgba(255, 255, 255, 0.2)',
         shadowColor: '#11d421',
         shadowOffset: {
             width: 0,
-            height: 6,
+            height: 8,
         },
-        shadowOpacity: 0.3,
-        shadowRadius: 12,
-        elevation: 10,
-        transform: [{ translateY: -15 }],
+        shadowOpacity: 0.4,
+        shadowRadius: 16,
+        elevation: 12,
+        transform: [{ translateY: -18 }],
     },
 });

@@ -42,6 +42,13 @@ export default function LandownerTabLayout() {
         }}
       />
       <Tabs.Screen
+        name="register-land"
+        options={{
+          title: 'Add Land',
+          tabBarIcon: ({ color }) => <MaterialIcons size={28} name="add-circle" color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="earnings"
         options={{
           title: 'Earnings',
@@ -49,17 +56,17 @@ export default function LandownerTabLayout() {
         }}
       />
       <Tabs.Screen
+        name="notifications"
+        options={{
+          title: 'Notifications',
+          tabBarIcon: ({ color }) => <MaterialIcons size={28} name="notifications" color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
           tabBarIcon: ({ color }) => <MaterialIcons size={28} name="person" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="register-land"
-        options={{
-          href: null, // Hide from tab bar
-          tabBarStyle: { display: 'none' }, // Hide bar when this screen is active
         }}
       />
     </Tabs>

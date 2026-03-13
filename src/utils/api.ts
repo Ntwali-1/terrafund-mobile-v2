@@ -280,6 +280,15 @@ class ApiClient {
     return this.handleResponse(response);
   }
 
+  async getLands(page = 0, size = 10): Promise<PageResponse<LandSummaryResponse>> {
+    const headers = await this.getAuthHeaders();
+    const response = await fetch(`${this.baseURL}/api/lands?page=${page}&size=${size}`, {
+      method: 'GET',
+      headers,
+    });
+    return this.handleResponse(response);
+  }
+
   async getLandById(id: number): Promise<LandResponse> {
     const headers = await this.getAuthHeaders();
     const response = await fetch(`${this.baseURL}/api/lands/${id}`, {

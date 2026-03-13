@@ -1,13 +1,16 @@
-import { View, Text, TouchableOpacity, ScrollView, ImageBackground, StyleSheet, ImageSourcePropType, Dimensions } from 'react-native';
+import { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, ImageBackground, StyleSheet, ImageSourcePropType, Dimensions, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { StatusBar } from 'expo-status-bar';
+import { apiClient, LandSummaryResponse } from '@/src/utils/api';
 
 const { width } = Dimensions.get('window');
 
 interface FarmCardProps {
+  id: number;
   image: ImageSourcePropType;
   location: string;
   crop: string;
@@ -18,9 +21,11 @@ interface FarmCardProps {
   address: string;
   minInvestment: string;
   riskLevel: string;
+  onPress: (id: number) => void;
 }
 
 const FarmCard: React.FC<FarmCardProps> = ({
+  id,
   image,
   location,
   crop,
@@ -31,6 +36,7 @@ const FarmCard: React.FC<FarmCardProps> = ({
   address,
   minInvestment,
   riskLevel,
+  onPress,
 }) => {
   const router = useRouter();
   const { colorScheme } = useColorScheme();
@@ -39,7 +45,7 @@ const FarmCard: React.FC<FarmCardProps> = ({
   return (
     <TouchableOpacity
       activeOpacity={0.9}
-      onPress={() => router.push("/investor/land-details")}
+      onPress={() => onPress(id)}
       style={[styles.card, {
         backgroundColor: isDark ? '#1a1a1a' : '#ffffff',
         borderColor: isDark ? '#333333' : '#eeeeee'
@@ -107,47 +113,24 @@ export default function ExploreScreen() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
 
-  const farmData = [
-    {
-      id: 1,
-      image: { uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuBTMzob97wzOdbextG8kkBB6JD_9Vcnr4fqZYSqKq0eUTmIH5mE8130doxFGqal7qrNn2HwWZNhHe49a24nPp6u8RtFbXlUXc6Z5Ee9ZJLeaWX8iA3wz3MXBmA6Yrt-tZd8CjQR1J5ZdXxsgw6sjaevpxmJnTk73OJHBQ0rNUakVSbOAhwX6Xxic8TBAHI0pwGF3iZDFYeK4Q8jRh1hpU1Bsv-I6r9kaL2YNsfZTeKvMvMrQi59rjN8L-tKjC29QvB7DSotS3Gy4K6Z" },
-      location: 'Ghana',
-      crop: 'Cocoa',
-      cropIcon: 'eco',
-      tag: 'High Growth',
-      title: 'Organic Cocoa Plantation',
-      roi: '14.5',
-      address: 'Kumasi, Ashanti Region',
-      minInvestment: '$5,000',
-      riskLevel: 'Medium'
-    },
-    {
-      id: 2,
-      image: { uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuCW3stKw_cvh6eN8sKfzcuwfxstYIncK6aDfWO4XN7opQLOF5g9HpNHoQR8k9FhAxXlmvrLcEe_rBL9GFZp3BaYM5NfyJGO8Jq0CHQJQAfhWWacC8wtM2pJV5hsVaHcLA5JceYwnl-CiKsCKEyzESBI6N6KTeEyva1jT2-aI4fZqi7erd8z8HsUwN9smEUnqlRIcgfsvq2B_ejAfWDKB5jLA21-Y6FvwkL2ONCD6KML_34w4ieZEWzEmD4PlfKDXtexCHj--Uplfx-O" },
-      location: 'Kenya',
-      crop: 'Maize',
-      cropIcon: 'grain',
-      tag: 'Stable Return',
-      title: 'Premium Maize Farm',
-      roi: '11.2',
-      address: 'Nakuru County, Rift Valley',
-      minInvestment: '$2,500',
-      riskLevel: 'Low'
-    },
-    {
-      id: 3,
-      image: { uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuDgi0k0kK7EAVJlM4HPznIpFto02Hdr1OgTAWpp1UL2KyZekFzTUM-TK5T8h-XpAJiEZRujMP49MAOwU_yLfEH90L2mg9OwY9iRZTeplIGkkKNWju7vh4ydOjRPhGLbY5D9yPb4allCH02lJchdkLR2E2E0qS4opSHGNAfaRMb_L9dlps2qCkfF2t-5eZKW6U3mBNN0tJIeelQTpjY9Xt2QMaB2vWlAEJvfXa-9tTSY9cZEwkQnLuCrtaA4RKxll7fON535xrH5ZCdb" },
-      location: 'South Africa',
-      crop: 'Wheat',
-      cropIcon: 'grass',
-      tag: 'Low Risk',
-      title: 'Sustainable Wheat Field',
-      roi: '12.0',
-      address: 'Free State Province',
-      minInvestment: '$8,000',
-      riskLevel: 'Low'
+  const [lands, setLands] = useState<LandSummaryResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchAllLands();
+  }, []);
+
+  const fetchAllLands = async () => {
+    try {
+      setLoading(true);
+      const response = await apiClient.getLands();
+      setLands(response.content);
+    } catch (error) {
+      console.error('Error fetching lands:', error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: isDark ? '#0a0a0a' : '#fcfcfc' }]} edges={['top']}>
@@ -201,10 +184,33 @@ export default function ExploreScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={[styles.resultsLabel, { color: isDark ? '#9ca3af' : '#6b7280' }]}>3 Lands Found</Text>
-          {farmData.map((farm) => (
-            <FarmCard key={farm.id} {...farm} />
-          ))}
+          <Text style={[styles.resultsLabel, { color: isDark ? '#9ca3af' : '#6b7280' }]}>{lands.length} Lands Found</Text>
+          {loading ? (
+              <ActivityIndicator size="large" color="#11d421" style={{ marginTop: 40 }} />
+          ) : lands.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                  <MaterialIcons name="landscape" size={48} color={isDark ? '#333' : '#ddd'} />
+                  <Text style={[styles.emptyText, { color: isDark ? '#888' : '#999' }]}>No lands found matching your criteria</Text>
+              </View>
+          ) : (
+                lands.map((land) => (
+                    <FarmCard 
+                        key={land.id} 
+                        id={land.id}
+                        image={{ uri: land.thumbnailUrl || "https://images.unsplash.com/photo-1500382017468-9049fed747ef" }}
+                        location={land.province}
+                        crop={land.sector}
+                        cropIcon="eco"
+                        tag="Available"
+                        title={`${land.sector} Plot`}
+                        roi="Dynamic"
+                        address={`${land.sector}, ${land.district}`}
+                        minInvestment={`${land.areaSqMeters} m²`}
+                        riskLevel="Low"
+                        onPress={(id) => router.push({ pathname: "/investor/land-details", params: { id } })}
+                    />
+                ))
+          )}
           <View style={{ height: 40 }} />
         </ScrollView>
       </View>
@@ -418,5 +424,16 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
+  },
+  emptyContainer: {
+    padding: 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
+  },
+  emptyText: {
+    fontSize: 14,
+    fontFamily: 'Poppins_500Medium',
+    textAlign: 'center',
   },
 });

@@ -2,14 +2,35 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
-import { Dimensions, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Dimensions, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { apiClient, LandSummaryResponse } from '@/src/utils/api';
 
 const { width } = Dimensions.get('window');
 
 export default function MyLandsScreen() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
+  
+  const [lands, setLands] = useState<LandSummaryResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchMyLands();
+  }, []);
+
+  const fetchMyLands = async () => {
+    try {
+      setLoading(true);
+      const response = await apiClient.getMyLands();
+      setLands(response.content);
+    } catch (error) {
+      console.error('Error fetching my lands:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: isDark ? '#0a0a0a' : '#f8fafc' }]} edges={['top']}>
@@ -34,7 +55,7 @@ export default function MyLandsScreen() {
         <View style={styles.header}>
           <View>
             <Text style={[styles.headerTitle, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>My Lands</Text>
-            <Text style={[styles.headerSubtitle, { color: isDark ? '#9ca3af' : '#6b7280' }]}>3 Verified Plots</Text>
+            <Text style={[styles.headerSubtitle, { color: isDark ? '#9ca3af' : '#6b7280' }]}>{lands.length} Verified Plots</Text>
           </View>
           <TouchableOpacity style={styles.addButton}>
             <LinearGradient
@@ -71,67 +92,56 @@ export default function MyLandsScreen() {
           </View>
 
           <View style={styles.landList}>
-            {[
-              {
-                title: 'Highland Ridge',
-                location: 'Ashanti Region',
-                size: '5.2 Ha',
-                status: 'Verified',
-                utilization: 100,
-                image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBG6pkj0nf3Yb5m7ydxIIPrNmg4wqjDqJ8Dy5MdcM4RB_4GB5_6ORxlAfMBb9ltlf7f6Tb6xmRjvdsF13fmIYLuG7ONbtVKnATf9H4n8XzxjEMMgVn_cg8AXJFRwcFlnj4H4qr4kLQrFlYsQauSfYOMi_1qI0tNAY3h3aB8sWGm5VnBOwDazXsAJLHiWq7ur6F2OJ5tE9Iq5-XPBCxK0ctCU3z5rNkYgczrcpvTxxobfDLr7JpnsBndo5lE2uY5H0jZJghkbSrlqFd6"
-              },
-              {
-                title: 'Valley Creek Plot',
-                location: 'Western Region',
-                size: '3.0 Ha',
-                status: 'In Review',
-                utilization: 0,
-                image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAmsLgO1fW85mREUoYJ9eE7WkQoF3r-9Y6V_-zBvW77_vYmY7Nrk4DkY1N_I-v7O-l7f-zBvW77_vYmY7Nrk4DkY1N_I-v7O-l7f"
-              },
-              {
-                title: 'Savannah Field',
-                location: 'Northern Region',
-                size: '4.3 Ha',
-                status: 'Verified',
-                utilization: 75,
-                image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBsm-R7qC3lW6e_X-zBvW77_vYmY7Nrk4DkY1N_I-v7O-l7f-zBvW77_vYmY7Nrk4DkY1N_I-v7O-l7f"
-              }
-            ].map((land, idx) => (
-              <TouchableOpacity
-                key={idx}
-                activeOpacity={0.9}
-                style={[styles.landCard, {
-                  backgroundColor: isDark ? '#1e1e1e' : '#ffffff',
-                  borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'
-                }]}
-              >
-                <Image source={{ uri: land.image }} style={styles.landImage} />
-                <View style={styles.landInfo}>
-                  <View style={styles.landHeader}>
-                    <Text style={[styles.landTitle, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>{land.title}</Text>
-                    <View style={[styles.statusBadge, { backgroundColor: land.status === 'Verified' ? 'rgba(17, 212, 33, 0.1)' : 'rgba(245, 158, 11, 0.1)' }]}>
-                      <Text style={[styles.statusText, { color: land.status === 'Verified' ? '#11d421' : '#f59e0b' }]}>{land.status.toUpperCase()}</Text>
-                    </View>
-                  </View>
-                  <Text style={[styles.landLocation, { color: isDark ? '#9ca3af' : '#6b7280' }]}>{land.location} • {land.size}</Text>
-
-                  <View style={styles.utilizationSection}>
-                    <View style={styles.utilizationHeader}>
-                      <Text style={[styles.utilizationLabel, { color: isDark ? '#9ca3af' : '#6b7280' }]}>Utilization</Text>
-                      <Text style={[styles.utilizationValue, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>{land.utilization}%</Text>
-                    </View>
-                    <View style={styles.utilizationBar}>
-                      <LinearGradient
-                        colors={['#11d421', '#0fb31c']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={[styles.utilizationFill, { width: `${land.utilization}%` }]}
-                      />
-                    </View>
-                  </View>
+            {loading ? (
+                <ActivityIndicator size="large" color="#11d421" style={{ marginTop: 40 }} />
+            ) : lands.length === 0 ? (
+                <View style={[styles.emptyState, { backgroundColor: isDark ? '#1a1a1a' : '#f8fafc' }]}>
+                    <MaterialIcons name="landscape" size={48} color={isDark ? '#333' : '#ddd'} />
+                    <Text style={[styles.emptyStateText, { color: isDark ? '#888' : '#999' }]}>No lands registered yet</Text>
                 </View>
-              </TouchableOpacity>
-            ))}
+            ) : (
+                lands.map((land, idx) => (
+                    <TouchableOpacity
+                      key={land.id || idx}
+                      activeOpacity={0.9}
+                      style={[styles.landCard, {
+                        backgroundColor: isDark ? '#1e1e1e' : '#ffffff',
+                        borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'
+                      }]}
+                    >
+                      <Image 
+                        source={{ uri: land.thumbnailUrl || "https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1000&auto=format&fit=crop" }} 
+                        style={styles.landImage} 
+                      />
+                      <View style={styles.landInfo}>
+                        <View style={styles.landHeader}>
+                          <Text style={[styles.landTitle, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>
+                              {land.sector}, {land.district}
+                          </Text>
+                          <View style={[styles.statusBadge, { backgroundColor: land.status === 'AVAILABLE' ? 'rgba(17, 212, 33, 0.1)' : 'rgba(245, 158, 11, 0.1)' }]}>
+                            <Text style={[styles.statusText, { color: land.status === 'AVAILABLE' ? '#11d421' : '#f59e0b' }]}>{land.status}</Text>
+                          </View>
+                        </View>
+                        <Text style={[styles.landLocation, { color: isDark ? '#9ca3af' : '#6b7280' }]}>{land.province} Province • {land.areaSqMeters >= 10000 ? (land.areaSqMeters / 10000).toFixed(1) + ' Ha' : land.areaSqMeters + ' m²'}</Text>
+      
+                        <View style={styles.utilizationSection}>
+                          <View style={styles.utilizationHeader}>
+                            <Text style={[styles.utilizationLabel, { color: isDark ? '#9ca3af' : '#6b7280' }]}>Utilization</Text>
+                            <Text style={[styles.utilizationValue, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>0%</Text>
+                          </View>
+                          <View style={styles.utilizationBar}>
+                            <LinearGradient
+                              colors={['#11d421', '#0fb31c']}
+                              start={{ x: 0, y: 0 }}
+                              end={{ x: 1, y: 0 }}
+                              style={[styles.utilizationFill, { width: `0%` }]}
+                            />
+                          </View>
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+                  ))
+            )}
           </View>
           <View style={{ height: 120 }} />
         </ScrollView>
@@ -291,5 +301,16 @@ const styles = StyleSheet.create({
   },
   utilizationFill: {
     height: '100%',
+  },
+  emptyState: {
+    padding: 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
+  },
+  emptyStateText: {
+    fontSize: 14,
+    fontFamily: 'Poppins_500Medium',
+    textAlign: 'center',
   },
 });

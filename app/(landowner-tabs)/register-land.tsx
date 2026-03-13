@@ -4,7 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import {
     ActivityIndicator,
     Animated,
@@ -19,6 +19,7 @@ import {
     View,
     Image,
     Alert,
+    Keyboard,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
@@ -58,6 +59,29 @@ export default function RegisterLandScreen() {
 
   const [currentStep, setCurrentStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
+    const hideSubscription = Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
+
+  const isStep1Complete = () => {
+    return (
+      province.trim().length > 0 &&
+      district.trim().length > 0 &&
+      sector.trim().length > 0 &&
+      areaSqMeters.trim().length > 0 &&
+      !isNaN(parseFloat(areaSqMeters)) &&
+      parseFloat(areaSqMeters) > 0 &&
+      !!availabilityType
+    );
+  };
 
   const steps = ['Details', 'Images', 'Docs'];
 
@@ -450,37 +474,39 @@ export default function RegisterLandScreen() {
           </ScrollView>
         </ScrollView>
 
-        {/* Navigation Buttons */}
-        <View style={[styles.navigationContainer, { paddingBottom: Math.max(insets.bottom, 24) }]}>
-          {currentStep > 0 && (
-            <TouchableOpacity onPress={goToPreviousStep} style={styles.backNavButton}>
-              <MaterialIcons name="arrow-back" size={20} color={theme.text} />
-              <Text style={{ color: theme.text }}>Back</Text>
-            </TouchableOpacity>
-          )}
+        {/* Navigation Buttons - Hidden when keyboard is open or step 1 is incomplete */}
+        {!keyboardVisible && (currentStep !== 0 || isStep1Complete()) && (
+            <View style={[styles.navigationContainer, { paddingBottom: Math.max(insets.bottom, 24) }]}>
+            {currentStep > 0 && (
+                <TouchableOpacity onPress={goToPreviousStep} style={styles.backNavButton}>
+                <MaterialIcons name="arrow-back" size={20} color={theme.text} />
+                <Text style={{ color: theme.text }}>Back</Text>
+                </TouchableOpacity>
+            )}
 
-          {currentStep < 2 ? (
-            <TouchableOpacity onPress={goToNextStep} style={[styles.nextNavButton, { marginLeft: 'auto' }]}>
-              <LinearGradient colors={['#11d421', '#0fb31c']} style={styles.navGradient}>
-                <Text style={styles.nextButtonText}>Next</Text>
-                <MaterialIcons name="arrow-forward" size={20} color="#ffffff" />
-              </LinearGradient>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity onPress={handleSubmit} disabled={submitting} style={[styles.nextNavButton, { marginLeft: 'auto' }]}>
-              <LinearGradient colors={['#11d421', '#0fb31c']} style={styles.navGradient}>
-                {submitting ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <>
-                    <Text style={styles.nextButtonText}>Submit Land</Text>
-                    <MaterialIcons name="check-circle" size={20} color="#ffffff" />
-                  </>
-                )}
-              </LinearGradient>
-            </TouchableOpacity>
-          )}
-        </View>
+            {currentStep < 2 ? (
+                <TouchableOpacity onPress={goToNextStep} style={[styles.nextNavButton, { marginLeft: 'auto' }]}>
+                <LinearGradient colors={['#11d421', '#0fb31c']} style={styles.navGradient}>
+                    <Text style={styles.nextButtonText}>Next</Text>
+                    <MaterialIcons name="arrow-forward" size={20} color="#ffffff" />
+                </LinearGradient>
+                </TouchableOpacity>
+            ) : (
+                <TouchableOpacity onPress={handleSubmit} disabled={submitting} style={[styles.nextNavButton, { marginLeft: 'auto' }]}>
+                <LinearGradient colors={['#11d421', '#0fb31c']} style={styles.navGradient}>
+                    {submitting ? (
+                    <ActivityIndicator color="#fff" />
+                    ) : (
+                    <>
+                        <Text style={styles.nextButtonText}>Submit Land</Text>
+                        <MaterialIcons name="check-circle" size={20} color="#ffffff" />
+                    </>
+                    )}
+                </LinearGradient>
+                </TouchableOpacity>
+            )}
+            </View>
+        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
