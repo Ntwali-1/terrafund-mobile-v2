@@ -1,24 +1,64 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Animated, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Animated, StatusBar, ActivityIndicator } from 'react-native';
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MotiView } from 'moti';
+import { apiClient, LandResponse } from '@/src/utils/api';
 
 const { width, height } = Dimensions.get('window');
 
 export default function LandDetailsScreen() {
     const router = useRouter();
+    const params = useLocalSearchParams();
     const insets = useSafeAreaInsets();
     const { colorScheme } = useColorScheme();
     const isDark = colorScheme === 'dark';
     const theme = isDark ? Colors.dark : Colors.light;
 
     const [isFavorite, setIsFavorite] = React.useState(false);
+    const [land, setLand] = React.useState<LandResponse | null>(null);
+    const [loading, setLoading] = React.useState(false);
+
+    React.useEffect(() => {
+        if (params.id) {
+            fetchLandDetails(Number(params.id));
+        }
+    }, [params.id]);
+
+    const fetchLandDetails = async (id: number) => {
+        try {
+            setLoading(true);
+            const data = await apiClient.getLandById(id);
+            setLand(data);
+        } catch (error) {
+            console.error('Error fetching land details:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <View style={[styles.container, { backgroundColor: theme.background, justifyContent: 'center', alignItems: 'center' }]}>
+                <ActivityIndicator size="large" color="#11d421" />
+            </View>
+        );
+    }
+
+    const landData = land || {
+        imageUrls: [],
+        province: 'Unknown',
+        district: 'Unknown',
+        sector: 'Unknown',
+        areaSqMeters: 0,
+        availabilityType: 'Unknown',
+        status: 'Unknown',
+    };
 
     return (
         <View style={[styles.container, { backgroundColor: theme.background }]}>
@@ -28,7 +68,7 @@ export default function LandDetailsScreen() {
                 {/* Hero Section */}
                 <View style={styles.heroContainer}>
                     <Image
-                        source={require('@/assets/images/pexels-akos-szabo-145938-440731.jpg')}
+                        source={landData.imageUrls.length > 0 ? { uri: landData.imageUrls[0] } : require('@/assets/images/pexels-akos-szabo-145938-440731.jpg')}
                         style={styles.heroImage}
                         contentFit="cover"
                         transition={500}
@@ -56,15 +96,15 @@ export default function LandDetailsScreen() {
                     <View style={styles.heroTitleContainer}>
                         <View style={styles.tagRow}>
                             <View style={[styles.tag, { backgroundColor: '#11d421' }]}>
-                                <Text style={styles.tagText}>High Yield</Text>
+                                <Text style={styles.tagText}>{landData.availabilityType}</Text>
                             </View>
                             <View style={[styles.tag, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
                                 <Ionicons name="location" size={12} color="#fff" />
-                                <Text style={styles.tagText}>Ghana, Ashanti</Text>
+                                <Text style={styles.tagText}>{landData.province}, {landData.district}</Text>
                             </View>
                         </View>
-                        <Text style={styles.heroTitle}>Premium Cocoa Plantation</Text>
-                        <Text style={styles.heroSubtitle}>Managed by Ashanti Agribusiness Ltd.</Text>
+                        <Text style={styles.heroTitle}>{landData.sector} Plot</Text>
+                        <Text style={styles.heroSubtitle}>Status: {landData.status}</Text>
                     </View>
                 </View>
 
@@ -73,17 +113,17 @@ export default function LandDetailsScreen() {
                     <View style={styles.statsRow}>
                         <View style={styles.statItem}>
                             <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Projected ROI</Text>
-                            <Text style={[styles.statValue, { color: '#11d421' }]}>14.5%</Text>
+                            <Text style={[styles.statValue, { color: '#11d421' }]}>Dynamic</Text>
                         </View>
                         <View style={styles.statDivider} />
                         <View style={styles.statItem}>
                             <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Asset Size</Text>
-                            <Text style={[styles.statValue, { color: theme.text }]}>250 Acres</Text>
+                            <Text style={[styles.statValue, { color: theme.text }]}>{landData.areaSqMeters} m²</Text>
                         </View>
                         <View style={styles.statDivider} />
                         <View style={styles.statItem}>
                             <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Risk Level</Text>
-                            <Text style={[styles.statValue, { color: '#f59e0b' }]}>Medium</Text>
+                            <Text style={[styles.statValue, { color: '#f59e0b' }]}>Low</Text>
                         </View>
                     </View>
 

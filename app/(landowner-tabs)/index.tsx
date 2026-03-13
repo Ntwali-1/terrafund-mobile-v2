@@ -111,7 +111,7 @@ export default function LandownerDashboard() {
                   <MaterialIcons name="agriculture" size={24} color="#f59e0b" />
                 </View>
                 <Text style={[styles.statLabel, { color: isDark ? '#9ca3af' : '#6b7280' }]}>PROJECTS</Text>
-                <Text style={[stats.statValue, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>{stats.projects} Ongoing</Text>
+                <Text style={[styles.statValue, { color: isDark ? '#ffffff' : '#0a0a0a' }]}>{stats.projects} Ongoing</Text>
               </View>
 
               <View style={[styles.statCard, { backgroundColor: isDark ? '#1a1a1a' : '#ffffff' }]}>

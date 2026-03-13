@@ -6,16 +6,23 @@ import { StatusBar } from 'expo-status-bar';
 import { Dimensions, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useAuth } from '@/src/utils/auth';
+
 const { width } = Dimensions.get('window');
 
 export default function ProfileScreen() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
   const router = useRouter();
+  const { logout } = useAuth();
 
-  const handleLogout = () => {
-    // TODO: Implement logout logic
-    router.replace('/auth/welcome');
+  const handleLogout = async () => {
+    try {
+        await logout();
+        router.replace('/auth/welcome');
+    } catch (error) {
+        console.error('Logout failed:', error);
+    }
   };
 
   return (
