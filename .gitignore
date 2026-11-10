@@ -41,5 +41,9 @@ app-example
 # generated native folders
 /ios
 /android
-config.bat
 branch_structure.json
+
+# Local environment files; keep sanitized examples trackable
+.env
+.env.*
+!.env.example
